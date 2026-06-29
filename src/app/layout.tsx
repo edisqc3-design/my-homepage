@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import ScrollToTop from '@/components/ui/ScrollToTop'
 import { getSiteSettings } from '@/lib/queries'
+import { getUser, checkIsAdmin } from '@/lib/auth-actions'
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
@@ -43,7 +44,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getSiteSettings()
+  const [settings, user] = await Promise.all([getSiteSettings(), getUser()])
+  const isAdmin = user ? await checkIsAdmin() : false
 
   return (
     <html lang="ko">
@@ -53,7 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
       </head>
       <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <TopBar />
+        <TopBar initialUser={user} initialIsAdmin={isAdmin} />
         <Header />
         <main style={{ flex: 1 }}>{children}</main>
         <Footer settings={settings} />
