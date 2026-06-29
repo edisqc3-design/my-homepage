@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import type {
   HeroSlide, BusinessCard, WideBoxSetting,
-  GalleryItem, Notice, Partner, SiteSetting, Faq, Product, Download
+  GalleryItem, Notice, Partner, SiteSetting, Faq, Product, Download, PublicInquiry
 } from '@/types'
 
 function getSupabase() {
@@ -139,4 +139,31 @@ export async function getDownloads(): Promise<Download[]> {
   const { data, error } = await sb.from('downloads').select('*').eq('is_active', true).order('sort_order')
   if (error) { console.error('getDownloads:', error); return [] }
   return data ?? []
+}
+
+// 메인 화면 '고객 문의' 박스용 - 개인정보 제외된 뷰(public_inquiries)에서만 조회
+export async function getPublicInquiries(limit = 5): Promise<PublicInquiry[]> {
+  const sb = getSupabase()
+  if (!sb) return []
+  const { data, error } = await sb.from('public_inquiries').select('*')
+    .order('created_at', { ascending: false }).limit(limit)
+  if (error) { console.error('getPublicInquiries:', error); return [] }
+  return data ?? []
+}
+
+export async function getAllPublicInquiries(): Promise<PublicInquiry[]> {
+  const sb = getSupabase()
+  if (!sb) return []
+  const { data, error } = await sb.from('public_inquiries').select('*')
+    .order('created_at', { ascending: false })
+  if (error) { console.error('getAllPublicInquiries:', error); return [] }
+  return data ?? []
+}
+
+export async function getPublicInquiryById(id: string): Promise<PublicInquiry | null> {
+  const sb = getSupabase()
+  if (!sb) return null
+  const { data, error } = await sb.from('public_inquiries').select('*').eq('id', id).single()
+  if (error) { console.error('getPublicInquiryById:', error); return null }
+  return data
 }
