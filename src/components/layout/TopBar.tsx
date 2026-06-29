@@ -54,15 +54,6 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
     router.refresh()
   }
 
-  const handleLoginClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    // 로그아웃 직후 미들웨어가 세션을 아직 볼 수 있으므로
-    // logged_out=1 파라미터로 미들웨어 리다이렉트를 우회
-    if (!user) {
-      e.preventDefault()
-      router.push('/auth/login?logged_out=1')
-    }
-  }
-
   return (
     <div style={{
       background: 'var(--navy)',
@@ -109,7 +100,7 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
             </>
           ) : (
             <>
-              <Link href="/auth/login?logged_out=1" onClick={handleLoginClick} style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
+              <Link href="/auth/login" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
                 로그인
