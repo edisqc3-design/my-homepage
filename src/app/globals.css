@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #0a1628;
+  --navy-mid: #112240;
+  --navy-light: #1e3a5f;
+  --gold: #c9a84c;
+  --gold-light: #e2c97e;
+  --gold-pale: #f5e9c8;
+  --white: #ffffff;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-300: #dee2e6;
+  --gray-500: #adb5bd;
+  --gray-700: #495057;
+  --gray-900: #212529;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Sans KR', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--gray-900);
+  background: var(--white);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.3; color: var(--navy); }
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; height: auto; }
+
+.section-gap { padding: 80px 0; }
+.section-gap-sm { padding: 48px 0; }
+@media (max-width: 768px) { .section-gap { padding: 48px 0; } }
+
+.center-heading { text-align: center; margin-bottom: 48px; }
+.center-heading h2 { font-size: 2rem; font-weight: 800; color: var(--navy); margin-bottom: 12px; }
+.center-heading .accent-line { width: 48px; height: 3px; background: var(--gold); margin: 0 auto 16px; border-radius: 2px; }
+.center-heading p { color: var(--gray-700); font-size: 1rem; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+.btn-primary {
+  display: inline-block; padding: 12px 28px; background: var(--gold);
+  color: var(--navy); font-weight: 700; font-size: 0.9rem; border-radius: 4px;
+  border: none; cursor: pointer; transition: background 0.2s, transform 0.1s; letter-spacing: 0.03em;
+}
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+.btn-outline {
+  display: inline-block; padding: 11px 28px; background: transparent;
+  color: var(--white); font-weight: 700; font-size: 0.9rem; border-radius: 4px;
+  border: 2px solid var(--white); cursor: pointer; transition: all 0.2s;
+}
+.btn-outline:hover { background: var(--white); color: var(--navy); }
+
+.btn-outline-gold {
+  display: inline-block; padding: 11px 28px; background: transparent;
+  color: var(--gold); font-weight: 700; font-size: 0.9rem; border-radius: 4px;
+  border: 2px solid var(--gold); cursor: pointer; transition: all 0.2s;
+}
+.btn-outline-gold:hover { background: var(--gold); color: var(--navy); }
+
+#btn-top {
+  position: fixed; right: 24px; bottom: 32px; width: 44px; height: 44px;
+  background: var(--navy); color: var(--gold); border: none; border-radius: 50%;
+  cursor: pointer; font-size: 1.1rem; display: flex; align-items: center;
+  justify-content: center; z-index: 9999; opacity: 0; transition: opacity 0.3s, transform 0.2s;
+  pointer-events: none;
+}
+#btn-top.visible { opacity: 1; pointer-events: auto; }
+#btn-top:hover { transform: translateY(-3px); }
