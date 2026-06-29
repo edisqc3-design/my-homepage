@@ -40,20 +40,10 @@ export default async function AdminDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '28px' }}>
         {stats.map(stat => (
           <Link key={stat.label} href={stat.href} style={{ display: 'block' }}>
-            <div style={{
+            <div className="admin-stat-card" style={{
               background: '#fff', borderRadius: '12px', padding: '20px 24px',
-              border: '1px solid #e5e7eb', transition: 'all 0.2s',
-            }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLDivElement
-                el.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'
-                el.style.transform = 'translateY(-2px)'
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLDivElement
-                el.style.boxShadow = 'none'
-                el.style.transform = 'none'
-              }}>
+              border: '1px solid #e5e7eb',
+            }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <p style={{ fontSize: '0.8rem', color: '#6b7280', marginBottom: '8px' }}>{stat.label}</p>
@@ -82,21 +72,10 @@ export default async function AdminDashboard() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             {quickMenus.map(menu => (
               <Link key={menu.href} href={menu.href} style={{ display: 'block' }}>
-                <div style={{
+                <div className="admin-quick-menu" style={{
                   padding: '14px', borderRadius: '10px',
                   border: '1px solid #f3f4f6', background: '#fafafa',
-                  transition: 'all 0.15s',
-                }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLDivElement
-                    el.style.borderColor = '#c9a84c'
-                    el.style.background = '#fffbf0'
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLDivElement
-                    el.style.borderColor = '#f3f4f6'
-                    el.style.background = '#fafafa'
-                  }}>
+                }}>
                   <div style={{ fontSize: '1.3rem', marginBottom: '6px' }}>{menu.icon}</div>
                   <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111827', marginBottom: '2px' }}>{menu.label}</p>
                   <p style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{menu.desc}</p>
@@ -123,12 +102,10 @@ export default async function AdminDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {recentInquiries.map((inq: { id: string; name: string; category: string; status: string; created_at: string; content: string }) => (
                 <Link key={inq.id} href="/admin/inquiries" style={{ display: 'block' }}>
-                  <div style={{
+                  <div className="admin-inquiry-row" style={{
                     padding: '12px 14px', borderRadius: '8px',
-                    border: '1px solid #f3f4f6', transition: 'border-color 0.15s',
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = '#c9a84c')}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = '#f3f4f6')}>
+                    border: '1px solid #f3f4f6',
+                  }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#111827' }}>{inq.name}</span>
