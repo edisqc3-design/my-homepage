@@ -8,30 +8,48 @@ import type { User } from '@supabase/supabase-js'
 
 export default function TopBar() {
   const [user, setUser] = useState<User | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
-  // 로그인/회원가입 페이지에서는 user 정보를 표시하지 않음
   const isAuthPage = pathname === '/auth/login' || pathname === '/auth/register'
+
+  const checkAdmin = async (email: string) => {
+    const sb = createClient()
+    const { data } = await sb
+      .from('admin_users')
+      .select('role')
+      .eq('email', email)
+      .single()
+    setIsAdmin(!!data)
+  }
 
   useEffect(() => {
     const sb = createClient()
 
     if (!isAuthPage) {
-      sb.auth.getUser().then(({ data }) => setUser(data.user))
+      sb.auth.getUser().then(({ data }) => {
+        setUser(data.user)
+        if (data.user?.email) checkAdmin(data.user.email)
+      })
     }
 
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       if (isAuthPage && event === 'SIGNED_IN') return
       setUser(session?.user ?? null)
+      if (session?.user?.email) {
+        checkAdmin(session.user.email)
+      } else {
+        setIsAdmin(false)
+      }
     })
     return () => subscription.unsubscribe()
   }, [isAuthPage])
 
-  // 클라이언트에서 직접 signOut → router로 이동 (Server Action redirect 문제 우회)
   const handleLogout = async () => {
     const sb = createClient()
     await sb.auth.signOut()
+    setIsAdmin(false)
     router.push('/')
     router.refresh()
   }
@@ -55,11 +73,21 @@ export default function TopBar() {
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           {user ? (
             <>
-              <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
-                👤 {user.user_metadata?.name ?? '마이페이지'}
-              </Link>
+              {isAdmin ? (
+                // 관리자: 관리자 페이지 링크
+                <Link href="/admin" style={{ color: 'var(--gold)', fontWeight: 700, transition: 'color 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                  🔧 관리자 페이지
+                </Link>
+              ) : (
+                // 일반 유저: 마이페이지 링크
+                <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
+                  👤 {user.user_metadata?.name ?? '마이페이지'}
+                </Link>
+              )}
               <span style={{ color: 'var(--gray-700)' }}>|</span>
               <button onClick={handleLogout} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
