@@ -18,22 +18,18 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
-  const isAuthPage = pathname === '/auth/login' || pathname === '/auth/register'
-
   useEffect(() => {
     const sb = createClient()
 
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       // INITIAL_SESSION: 서버에서 이미 계산한 initialIsAdmin을 그대로 사용 → 깜빡임 방지
       if (event === 'INITIAL_SESSION') return
-      // 로그인 페이지에서 SIGNED_IN 이벤트 무시 (리다이렉트 루프 방지)
-      if (isAuthPage && event === 'SIGNED_IN') return
 
       const nextUser = session?.user ?? null
       setUser(nextUser)
 
       if (nextUser) {
-        // 실제 로그인/토큰갱신 시에만 admin 재확인
+        // 로그인/토큰갱신 시 admin 재확인 (SIGNED_IN, TOKEN_REFRESHED 등)
         checkIsAdmin().then(setIsAdmin)
       } else {
         setIsAdmin(false)
@@ -41,15 +37,13 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
     })
 
     return () => subscription.unsubscribe()
-  }, [isAuthPage])
+  }, []) // pathname 의존성 제거 — 페이지 이동마다 재구독 불필요
 
   const handleLogout = async () => {
     const sb = createClient()
     await sb.auth.signOut()
-    // 상태 먼저 초기화
     setUser(null)
     setIsAdmin(false)
-    // router.push로 홈 이동 (refresh는 push 후 자동 처리됨)
     router.push('/')
     router.refresh()
   }
@@ -74,14 +68,12 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
           {user ? (
             <>
               {isAdmin ? (
-                // 관리자: 관리자 페이지 링크
                 <Link href="/admin" style={{ color: 'var(--gold)', fontWeight: 700, transition: 'color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
                   onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
                   🔧 관리자 페이지
                 </Link>
               ) : (
-                // 일반 유저: 마이페이지 링크
                 <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
                   onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
