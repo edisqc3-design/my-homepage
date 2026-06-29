@@ -24,14 +24,16 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
     const sb = createClient()
 
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
-      // 로그인 페이지에서 SIGNED_IN 이벤트는 무시 (리다이렉트 루프 방지)
+      // INITIAL_SESSION: 서버에서 이미 계산한 initialIsAdmin을 그대로 사용 → 깜빡임 방지
+      if (event === 'INITIAL_SESSION') return
+      // 로그인 페이지에서 SIGNED_IN 이벤트 무시 (리다이렉트 루프 방지)
       if (isAuthPage && event === 'SIGNED_IN') return
 
       const nextUser = session?.user ?? null
       setUser(nextUser)
 
       if (nextUser) {
-        // INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED 모두 admin 재확인
+        // 실제 로그인/토큰갱신 시에만 admin 재확인
         checkIsAdmin().then(setIsAdmin)
       } else {
         setIsAdmin(false)
