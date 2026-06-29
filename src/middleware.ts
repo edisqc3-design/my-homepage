@@ -42,9 +42,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 로그인 상태에서 auth 페이지 접근 시 홈으로 (callback 제외)
+  // 로그인 상태에서 auth 페이지 접근 시 홈으로
+  // callback 제외, 그리고 로그아웃 직후를 표시하는 쿼리파라미터(logged_out) 제외
   const isCallback = path === '/auth/callback'
-  if (path.startsWith('/auth') && !isCallback && user) {
+  const isLoggedOut = request.nextUrl.searchParams.get('logged_out') === '1'
+  if (path.startsWith('/auth') && !isCallback && !isLoggedOut && user) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
