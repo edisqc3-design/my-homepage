@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
+import { checkIsAdmin } from '@/lib/auth-actions'
 import type { User } from '@supabase/supabase-js'
 
 export default function TopBar() {
@@ -14,31 +15,23 @@ export default function TopBar() {
 
   const isAuthPage = pathname === '/auth/login' || pathname === '/auth/register'
 
-  const checkAdmin = async (email: string) => {
-    const sb = createClient()
-    const { data } = await sb
-      .from('admin_users')
-      .select('role')
-      .eq('email', email)
-      .single()
-    setIsAdmin(!!data)
-  }
-
   useEffect(() => {
     const sb = createClient()
 
     if (!isAuthPage) {
       sb.auth.getUser().then(({ data }) => {
         setUser(data.user)
-        if (data.user?.email) checkAdmin(data.user.email)
+        if (data.user) {
+          checkIsAdmin().then(setIsAdmin)
+        }
       })
     }
 
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       if (isAuthPage && event === 'SIGNED_IN') return
       setUser(session?.user ?? null)
-      if (session?.user?.email) {
-        checkAdmin(session.user.email)
+      if (session?.user) {
+        checkIsAdmin().then(setIsAdmin)
       } else {
         setIsAdmin(false)
       }
