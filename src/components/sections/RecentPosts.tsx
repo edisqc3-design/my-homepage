@@ -3,78 +3,125 @@
 import Link from 'next/link'
 import type { Notice, PublicInquiry } from '@/types'
 
-type PostItem = {
-  id: string
-  title: string
-  created_at: string
-  is_pinned?: boolean
-}
-
-function PostList({ title, items, href }: { title: string, items: PostItem[], href: string }) {
+export default function RecentPosts({ notices, inquiries }: { notices: Notice[], inquiries: PublicInquiry[] }) {
   return (
-    <div>
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '14px 20px', background: 'var(--navy)', borderRadius: '8px 8px 0 0',
-      }}>
-        <strong style={{ color: 'var(--white)', fontSize: '0.95rem', fontWeight: 700 }}>{title}</strong>
-        <Link href={href} style={{ color: 'var(--gold)', fontSize: '0.78rem' }}>더보기 +</Link>
-      </div>
+    <section style={{ background: 'linear-gradient(180deg, #f8f9fa 0%, #fff 100%)', padding: '72px 0' }}>
+      <div className="container">
 
-      <ul style={{ border: '1px solid var(--gray-100)', borderTop: 'none', borderRadius: '0 0 8px 8px', overflow: 'hidden', listStyle: 'none' }}>
-        {items.length === 0 ? (
-          <li style={{ padding: '20px 16px', color: 'var(--gray-500)', fontSize: '0.875rem', textAlign: 'center' }}>
-            등록된 글이 없습니다.
-          </li>
-        ) : items.map((item, i) => (
-          <li key={item.id} style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '11px 16px', borderTop: i > 0 ? '1px solid var(--gray-100)' : 'none', transition: 'background 0.15s',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--gray-50)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-              {item.is_pinned && (
-                <span style={{ padding: '1px 6px', background: '#e63946', color: 'white', fontSize: '0.65rem', fontWeight: 700, borderRadius: '3px', flexShrink: 0 }}>공지</span>
-              )}
-              <Link href={`${href}/${item.id}`} style={{
-                fontSize: '0.875rem', color: 'var(--gray-900)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--navy)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'var(--gray-900)')}>
-                {item.title}
+        {/* 섹션 헤더 */}
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <p style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.2em', color: 'var(--gold)', textTransform: 'uppercase', marginBottom: '10px' }}>
+            NOTICE &amp; INQUIRY
+          </p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--navy)', marginBottom: '12px' }}>
+            공지사항 &amp; 고객 문의
+          </h2>
+          <div style={{ width: '40px', height: '3px', background: 'var(--gold)', margin: '0 auto', borderRadius: '2px' }} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }} className="posts-grid">
+
+          {/* ── 공지사항 ── */}
+          <div style={{ background: 'var(--white)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(10,22,40,0.07)', border: '1px solid rgba(10,22,40,0.06)' }}>
+            {/* 카드 헤더 */}
+            <div style={{ padding: '22px 28px', background: 'var(--navy)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(201,168,76,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>📢</span>
+                <strong style={{ color: 'var(--white)', fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.02em' }}>공지사항</strong>
+              </div>
+              <Link href="/notice" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 600, opacity: 0.85, transition: 'opacity 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '0.85')}>
+                더보기 <span style={{ fontSize: '0.7rem' }}>›</span>
               </Link>
             </div>
-            <span style={{ color: 'var(--gray-500)', fontSize: '0.78rem', flexShrink: 0, marginLeft: '12px' }}>
-              {item.created_at.slice(5, 10)}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
 
-export default function RecentPosts({ notices, inquiries }: { notices: Notice[], inquiries: PublicInquiry[] }) {
-  const noticeItems: PostItem[] = notices.map(n => ({
-    id: n.id, title: n.title, created_at: n.created_at, is_pinned: n.is_pinned,
-  }))
+            {/* 목록 */}
+            <div style={{ padding: '8px 0' }}>
+              {notices.length === 0 ? (
+                <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--gray-500)', fontSize: '0.875rem' }}>등록된 공지사항이 없습니다.</div>
+              ) : notices.map((n, i) => (
+                <Link key={n.id} href={`/notice/${n.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 28px', borderBottom: i < notices.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none', transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f8f9fa')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                    {n.is_pinned ? (
+                      <span style={{ padding: '2px 7px', background: 'rgba(201,168,76,0.15)', color: 'var(--gold)', fontSize: '0.62rem', fontWeight: 800, borderRadius: '4px', flexShrink: 0, letterSpacing: '0.05em' }}>공지</span>
+                    ) : (
+                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--gold)', flexShrink: 0, opacity: 0.5 }} />
+                    )}
+                    <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', fontWeight: n.is_pinned ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {n.title}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)', flexShrink: 0, marginLeft: '16px' }}>
+                    {n.created_at.slice(5, 10)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
 
-  const inquiryItems: PostItem[] = inquiries.map(q => ({
-    id: q.id,
-    title: `[${q.category ?? '기타'}] ${q.content}`,
-    created_at: q.created_at,
-  }))
+          {/* ── 고객 문의 ── */}
+          <div style={{ background: 'var(--white)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(10,22,40,0.07)', border: '1px solid rgba(10,22,40,0.06)' }}>
+            {/* 카드 헤더 */}
+            <div style={{ padding: '22px 28px', background: 'linear-gradient(135deg, #112240 0%, #1e3a5f 100%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(201,168,76,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>💬</span>
+                <strong style={{ color: 'var(--white)', fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.02em' }}>고객 문의</strong>
+              </div>
+              <Link href="/inquiry/board" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--gold)', fontSize: '0.78rem', fontWeight: 600, opacity: 0.85, transition: 'opacity 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '0.85')}>
+                더보기 <span style={{ fontSize: '0.7rem' }}>›</span>
+              </Link>
+            </div>
 
-  return (
-    <section className="section-gap-sm" style={{ background: 'var(--gray-50)' }}>
-      <div className="container">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="posts-grid">
-          <PostList title="공지사항" items={noticeItems} href="/notice" />
-          <PostList title="고객 문의" items={inquiryItems} href="/inquiry/board" />
+            {/* 목록 */}
+            <div style={{ padding: '8px 0' }}>
+              {inquiries.length === 0 ? (
+                <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--gray-500)', fontSize: '0.875rem' }}>등록된 문의가 없습니다.</div>
+              ) : inquiries.map((q, i) => (
+                <Link key={q.id} href={`/inquiry/board/${q.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 28px', borderBottom: i < inquiries.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none', transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f8f9fa')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                    {/* 카테고리 뱃지 */}
+                    <span style={{ padding: '2px 8px', background: 'rgba(10,22,40,0.07)', color: 'var(--navy)', fontSize: '0.65rem', fontWeight: 700, borderRadius: '4px', flexShrink: 0, letterSpacing: '0.03em' }}>
+                      {q.category ?? '기타'}
+                    </span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                      {q.content}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '12px' }}>
+                    {/* 답변 상태 */}
+                    {q.status === 'done' ? (
+                      <span style={{ padding: '2px 8px', background: 'rgba(34,197,94,0.1)', color: '#15803d', fontSize: '0.62rem', fontWeight: 800, borderRadius: '4px', letterSpacing: '0.03em' }}>답변완료</span>
+                    ) : (
+                      <span style={{ padding: '2px 8px', background: 'rgba(234,179,8,0.1)', color: '#a16207', fontSize: '0.62rem', fontWeight: 800, borderRadius: '4px', letterSpacing: '0.03em' }}>대기중</span>
+                    )}
+                    <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>
+                      {q.created_at.slice(5, 10)}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* 문의 작성 링크 */}
+            <div style={{ padding: '16px 28px', borderTop: '1px solid rgba(0,0,0,0.05)', background: 'rgba(10,22,40,0.02)' }}>
+              <Link href="/inquiry" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px', borderRadius: '8px', border: '1px dashed rgba(201,168,76,0.4)', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.15s', letterSpacing: '0.02em' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(201,168,76,0.06)'; e.currentTarget.style.borderColor = 'var(--gold)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(201,168,76,0.4)' }}>
+                ✏️ 1:1 문의 남기기
+              </Link>
+            </div>
+          </div>
+
         </div>
       </div>
+
       <style>{`
         @media (max-width: 768px) { .posts-grid { grid-template-columns: 1fr !important; } }
       `}</style>
