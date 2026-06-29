@@ -5,7 +5,7 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import ScrollToTop from '@/components/ui/ScrollToTop'
 import { getSiteSettings } from '@/lib/queries'
-import { getUser, checkIsAdmin } from '@/lib/auth-actions'
+import { getUser, checkIsAdminForUser } from '@/lib/auth-actions'
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
@@ -37,15 +37,17 @@ export async function generateMetadata(): Promise<Metadata> {
       googleBot: { index: true, follow: true },
     },
     verification: {
-      google: '', // Google Search Console 인증 코드 입력
-      other: { 'naver-site-verification': '' }, // 네이버 서치어드바이저
+      google: '',
+      other: { 'naver-site-verification': '' },
     },
   }
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // settings와 user를 동시에 fetch
   const [settings, user] = await Promise.all([getSiteSettings(), getUser()])
-  const isAdmin = user ? await checkIsAdmin() : false
+  // user.email이 있을 때만 admin 체크 — getUser() 중복 호출 없음
+  const isAdmin = user?.email ? await checkIsAdminForUser(user.email) : false
 
   return (
     <html lang="ko">
