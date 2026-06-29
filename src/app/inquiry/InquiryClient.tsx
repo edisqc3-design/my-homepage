@@ -157,8 +157,10 @@ export default function InquiryClient() {
                           padding: '7px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
                           background: form.category === cat ? 'var(--navy)' : 'var(--white)',
                           color: form.category === cat ? 'var(--white)' : 'var(--gray-600)',
-                          border: form.category === cat ? '1px solid var(--navy)' : '1px solid var(--gray-200)',
-                          transition: 'all 0.15s',
+                          border: '1px solid',
+                          borderColor: form.category === cat ? 'var(--navy)' : 'var(--gray-200)',
+                          transition: 'background-color 0.15s, color 0.15s, border-color 0.15s',
+                          flexShrink: 0,
                         }}>
                           {cat}
                         </button>
