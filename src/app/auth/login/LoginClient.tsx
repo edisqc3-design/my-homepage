@@ -2,7 +2,8 @@
 
 import { useState, use } from 'react'
 import Link from 'next/link'
-import { login } from '@/lib/auth-actions'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase-browser'
 
 const inputStyle: React.CSSProperties = {
   width: '100%', padding: '12px 14px',
@@ -20,6 +21,7 @@ export default function LoginClient({ searchParams }: { searchParams: Promise<{ 
   const [form, setForm] = useState({ email: '', password: '' })
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+  const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -32,11 +34,21 @@ export default function LoginClient({ searchParams }: { searchParams: Promise<{ 
     }
     setStatus('loading')
     setErrorMsg('')
-    const result = await login({ ...form, next })
-    if (result && !result.success) {
-      setErrorMsg(result.error ?? '로그인에 실패했습니다.')
+
+    const sb = createClient()
+    const { error } = await sb.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    })
+
+    if (error) {
+      setErrorMsg('이메일 또는 비밀번호가 올바르지 않습니다.')
       setStatus('error')
+      return
     }
+
+    router.refresh()
+    router.push(next ?? '/')
   }
 
   return (
@@ -53,7 +65,6 @@ export default function LoginClient({ searchParams }: { searchParams: Promise<{ 
           <h1 style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--navy)', marginBottom: '6px' }}>로그인</h1>
           <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', marginBottom: '28px' }}>계정에 로그인하여 서비스를 이용하세요</p>
 
-          {/* 가입 완료 안내 */}
           {justRegistered && (
             <div style={{ padding: '12px 14px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', color: '#166534', fontSize: '0.875rem', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>✅</span> 회원가입이 완료되었습니다. 로그인해 주세요.
