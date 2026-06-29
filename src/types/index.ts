@@ -92,6 +92,15 @@ export type Inquiry = {
   created_at: string
 }
 
+export type PublicInquiry = {
+  id: string
+  category: string | null
+  content: string
+  status: 'pending' | 'done'
+  admin_reply: string | null
+  created_at: string
+}
+
 export type Faq = {
   id: string
   sort_order: number
