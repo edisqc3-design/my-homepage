@@ -2,31 +2,34 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
+import { logout } from '@/lib/auth-actions'
 import type { User } from '@supabase/supabase-js'
 
 export default function TopBar() {
   const [user, setUser] = useState<User | null>(null)
-  const router = useRouter()
+  const pathname = usePathname()
+
+  // 로그인/회원가입 페이지에서는 user 정보를 표시하지 않음
+  // (로그인 처리 중 redirect 전에 TopBar가 먼저 바뀌는 것을 방지)
+  const isAuthPage = pathname === '/auth/login' || pathname === '/auth/register'
 
   useEffect(() => {
     const sb = createClient()
-    sb.auth.getUser().then(({ data }) => setUser(data.user))
-    const { data: { subscription } } = sb.auth.onAuthStateChange((_, session) => {
+
+    // 인증 페이지에서는 초기 user 조회도 건너뜀
+    if (!isAuthPage) {
+      sb.auth.getUser().then(({ data }) => setUser(data.user))
+    }
+
+    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+      // 로그인 페이지에서 SIGNED_IN 이벤트 발생 시 무시 (redirect 전 깜빡임 방지)
+      if (isAuthPage && event === 'SIGNED_IN') return
       setUser(session?.user ?? null)
-      router.refresh()
     })
     return () => subscription.unsubscribe()
-  }, [])
-
-  const handleLogout = async () => {
-    const sb = createClient()
-    await sb.auth.signOut()
-    setUser(null)
-    router.refresh()
-    router.push('/')
-  }
+  }, [isAuthPage])
 
   return (
     <div style={{
@@ -53,7 +56,7 @@ export default function TopBar() {
                 👤 {user.user_metadata?.name ?? '마이페이지'}
               </Link>
               <span style={{ color: 'var(--gray-700)' }}>|</span>
-              <button onClick={handleLogout} style={{
+              <button onClick={() => logout()} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', padding: 0, transition: 'color 0.2s',
               }}
