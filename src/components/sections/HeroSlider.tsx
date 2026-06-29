@@ -63,7 +63,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
             color: 'var(--white)', fontSize: 'clamp(2rem, 4vw, 3rem)',
             fontWeight: 900, lineHeight: 1.25, marginBottom: '20px', whiteSpace: 'pre-line',
           }}>
-            {slide.title}
+            {slide.title?.replace(/\\n/g, '\n')}
           </h1>
 
           {slide.description && (
@@ -71,7 +71,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
               color: 'rgba(255,255,255,0.7)', fontSize: '1rem',
               lineHeight: 1.7, marginBottom: '36px', whiteSpace: 'pre-line',
             }}>
-              {slide.description}
+              {slide.description?.replace(/\\n/g, '\n')}
             </p>
           )}
 
