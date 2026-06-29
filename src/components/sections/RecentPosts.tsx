@@ -1,9 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import type { Notice } from '@/types'
+import type { Notice, PublicInquiry } from '@/types'
 
-function PostList({ title, items, href }: { title: string, items: Notice[], href: string }) {
+type PostItem = {
+  id: string
+  title: string
+  created_at: string
+  is_pinned?: boolean
+}
+
+function PostList({ title, items, href }: { title: string, items: PostItem[], href: string }) {
   return (
     <div>
       <div style={{
@@ -49,13 +56,23 @@ function PostList({ title, items, href }: { title: string, items: Notice[], href
   )
 }
 
-export default function RecentPosts({ notices }: { notices: Notice[] }) {
+export default function RecentPosts({ notices, inquiries }: { notices: Notice[], inquiries: PublicInquiry[] }) {
+  const noticeItems: PostItem[] = notices.map(n => ({
+    id: n.id, title: n.title, created_at: n.created_at, is_pinned: n.is_pinned,
+  }))
+
+  const inquiryItems: PostItem[] = inquiries.map(q => ({
+    id: q.id,
+    title: `[${q.category ?? '기타'}] ${q.content}`,
+    created_at: q.created_at,
+  }))
+
   return (
     <section className="section-gap-sm" style={{ background: 'var(--gray-50)' }}>
       <div className="container">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="posts-grid">
-          <PostList title="공지사항" items={notices} href="/notice" />
-          <PostList title="고객 문의" items={[]} href="/inquiry" />
+          <PostList title="공지사항" items={noticeItems} href="/notice" />
+          <PostList title="고객 문의" items={inquiryItems} href="/inquiry/board" />
         </div>
       </div>
       <style>{`
