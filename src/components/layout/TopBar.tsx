@@ -37,18 +37,20 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
       if (event === 'INITIAL_SESSION') return
 
       const nextUser = session?.user ?? null
-      setUser(nextUser)
 
       if (!nextUser) {
+        setUser(null)
         setIsAdmin(false)
         return
       }
 
-      // SIGNED_IN: router.refresh()로 서버가 initialIsAdmin을 갱신해서 내려줌
-      // → props 변경 useEffect가 처리하므로 여기서 중복 checkIsAdmin() 호출 불필요
+      // SIGNED_IN: user와 isAdmin을 함께 갱신해야 "일반회원 -> 관리자" 깜빡임이 안 생김.
+      // router.refresh()로 서버가 새 initialIsAdmin을 내려주면 props 변경 useEffect가
+      // user/isAdmin을 동시에 맞춰주므로, 여기서는 user를 먼저 set하지 않고 기다린다.
       if (event === 'SIGNED_IN') return
 
-      // TOKEN_REFRESHED 등 다른 이벤트에서만 재확인
+      // TOKEN_REFRESHED 등 다른 이벤트는 user 변경이 없으므로 isAdmin만 재확인
+      setUser(nextUser)
       checkIsAdmin().then(setIsAdmin)
     })
 
