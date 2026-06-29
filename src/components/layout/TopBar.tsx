@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 import { checkIsAdmin } from '@/lib/auth-actions'
 import type { User } from '@supabase/supabase-js'
@@ -15,29 +15,45 @@ interface TopBarProps {
 export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
   const [user, setUser] = useState<User | null>(initialUser)
   const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
-  const pathname = usePathname()
   const router = useRouter()
+
+  // 서버에서 내려온 최신 initialIsAdmin을 ref로 추적
+  // props가 바뀔 때(router.refresh 후 서버 재렌더) 클라이언트 상태도 동기화
+  const initialIsAdminRef = useRef(initialIsAdmin)
+  useEffect(() => {
+    if (initialIsAdminRef.current !== initialIsAdmin) {
+      initialIsAdminRef.current = initialIsAdmin
+      setIsAdmin(initialIsAdmin)
+    }
+    if (initialUser?.id !== user?.id) {
+      setUser(initialUser)
+    }
+  }, [initialIsAdmin, initialUser])
 
   useEffect(() => {
     const sb = createClient()
 
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
-      // INITIAL_SESSION: 서버에서 이미 계산한 initialIsAdmin을 그대로 사용 → 깜빡임 방지
       if (event === 'INITIAL_SESSION') return
 
       const nextUser = session?.user ?? null
       setUser(nextUser)
 
-      if (nextUser) {
-        // 로그인/토큰갱신 시 admin 재확인 (SIGNED_IN, TOKEN_REFRESHED 등)
-        checkIsAdmin().then(setIsAdmin)
-      } else {
+      if (!nextUser) {
         setIsAdmin(false)
+        return
       }
+
+      // SIGNED_IN: router.refresh()로 서버가 initialIsAdmin을 갱신해서 내려줌
+      // → props 변경 useEffect가 처리하므로 여기서 중복 checkIsAdmin() 호출 불필요
+      if (event === 'SIGNED_IN') return
+
+      // TOKEN_REFRESHED 등 다른 이벤트에서만 재확인
+      checkIsAdmin().then(setIsAdmin)
     })
 
     return () => subscription.unsubscribe()
-  }, []) // pathname 의존성 제거 — 페이지 이동마다 재구독 불필요
+  }, [])
 
   const handleLogout = async () => {
     const sb = createClient()
