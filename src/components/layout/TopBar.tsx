@@ -87,7 +87,7 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
                 <Link href="/admin" style={{ color: 'var(--gold)', fontWeight: 700, transition: 'color 0.2s' }}
                   onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
                   onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                  🔧 관리자 페이지
+                  🔧 관리자
                 </Link>
               ) : (
                 <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
