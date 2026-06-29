@@ -6,6 +6,7 @@ import {
   getNotices,
   getPartners,
   getSiteSettings,
+  getPublicInquiries,
 } from '@/lib/queries'
 
 import HeroSlider from '@/components/sections/HeroSlider'
@@ -21,7 +22,7 @@ import Partners from '@/components/sections/Partners'
 export const revalidate = 60 // 60초마다 ISR 재생성
 
 export default async function HomePage() {
-  const [slides, cards, wideBox, gallery, notices, partners, settings] = await Promise.all([
+  const [slides, cards, wideBox, gallery, notices, partners, settings, inquiries] = await Promise.all([
     getHeroSlides(),
     getBusinessCards(),
     getWideBoxSetting(),
@@ -29,6 +30,7 @@ export default async function HomePage() {
     getNotices(5),
     getPartners(),
     getSiteSettings(),
+    getPublicInquiries(5),
   ])
 
   return (
@@ -38,7 +40,7 @@ export default async function HomePage() {
       <WideBox data={wideBox} />
       <GalleryGrid items={gallery} />
       <CtaBanner />
-      <RecentPosts notices={notices} />
+      <RecentPosts notices={notices} inquiries={inquiries} />
       <CustomerSupport settings={settings} />
       <Partners partners={partners} />
     </>
