@@ -56,12 +56,8 @@ export async function getUser() {
   return user
 }
 
-// 현재 로그인한 유저가 관리자인지 서버에서 확인 (service_role 사용, anon에게 admin_users 테이블을 열어줄 필요 없음)
-export async function checkIsAdmin(): Promise<boolean> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.email) return false
-
+// email을 직접 받아서 getUser() 중복 호출 제거
+async function checkIsAdminByEmail(email: string): Promise<boolean> {
   const adminSupabase = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -69,8 +65,21 @@ export async function checkIsAdmin(): Promise<boolean> {
   const { data: adminUser } = await adminSupabase
     .from('admin_users')
     .select('id')
-    .eq('email', user.email)
+    .eq('email', email)
     .single()
 
   return !!adminUser
+}
+
+// 클라이언트(TopBar)에서 onAuthStateChange 후 호출하는 용도 — 내부에서 getUser() 필요
+export async function checkIsAdmin(): Promise<boolean> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.email) return false
+  return checkIsAdminByEmail(user.email)
+}
+
+// layout.tsx 전용: 이미 가져온 user를 재활용해서 DB 왕복 1번 절감
+export async function checkIsAdminForUser(email: string): Promise<boolean> {
+  return checkIsAdminByEmail(email)
 }
