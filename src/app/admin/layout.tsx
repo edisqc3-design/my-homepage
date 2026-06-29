@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminHeader from '@/components/admin/AdminHeader'
@@ -9,8 +10,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!user) redirect('/auth/login?next=/admin')
 
-  // admin_users 테이블에 등록된 유저인지 확인
-  const { data: adminUser } = await supabase
+  // admin_users 테이블은 RLS를 우회하기 위해 service_role key 사용
+  const adminSupabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: adminUser } = await adminSupabase
     .from('admin_users')
     .select('*')
     .eq('email', user.email ?? '')
