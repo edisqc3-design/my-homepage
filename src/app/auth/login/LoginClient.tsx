@@ -47,8 +47,8 @@ export default function LoginClient({ searchParams }: { searchParams: Promise<{ 
       return
     }
 
-    router.refresh()
     router.push(next ?? '/')
+    router.refresh()
   }
 
   return (
