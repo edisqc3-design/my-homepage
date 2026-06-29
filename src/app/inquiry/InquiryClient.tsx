@@ -153,7 +153,7 @@ export default function InquiryClient() {
                     <label style={labelStyle}>문의 유형 <span style={{ color: '#e63946' }}>*</span></label>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {CATEGORIES.map(cat => (
-                        <button key={cat} onClick={() => setForm(p => ({ ...p, category: cat }))} style={{
+                        <button key={cat} type="button" onClick={() => setForm(p => ({ ...p, category: cat }))} style={{
                           padding: '7px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
                           background: form.category === cat ? 'var(--navy)' : 'var(--white)',
                           color: form.category === cat ? 'var(--white)' : 'var(--gray-600)',
