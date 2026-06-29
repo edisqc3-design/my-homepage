@@ -71,3 +71,13 @@ img { max-width: 100%; height: auto; }
 }
 #btn-top.visible { opacity: 1; pointer-events: auto; }
 #btn-top:hover { transform: translateY(-3px); }
+
+/* 관리자 대시보드 카드 호버 효과 */
+.admin-stat-card { transition: all 0.2s; }
+.admin-stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+
+.admin-quick-menu { transition: all 0.15s; }
+.admin-quick-menu:hover { border-color: #c9a84c; background: #fffbf0; }
+
+.admin-inquiry-row { transition: border-color 0.15s; }
+.admin-inquiry-row:hover { border-color: #c9a84c; }
