@@ -158,7 +158,10 @@ export default function InquiriesAdminClient({ initialInquiries }: { initialInqu
                   placeholder="고객에게 전달될 답변을 입력하세요..."
                 />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '12px', justifyContent: 'flex-end' }}>
-                  <Btn variant="secondary" onClick={() => setReply(selected.admin_reply ?? '')}>초기화</Btn>
+                  <Btn variant="secondary" onClick={() => setReply('')}>비우기</Btn>
+                  {selected.admin_reply && (
+                    <Btn variant="secondary" onClick={() => setReply(selected.admin_reply ?? '')}>저장된 답변으로</Btn>
+                  )}
                   <Btn onClick={handleReply} disabled={saving || !reply.trim()}>
                     {saving ? '저장 중...' : selected.admin_reply ? '답변 수정' : '답변 등록'}
                   </Btn>
