@@ -2,21 +2,31 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
-import { logout } from '@/lib/auth-actions'
 import type { User } from '@supabase/supabase-js'
 
 export default function TopBar() {
   const [user, setUser] = useState<User | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const sb = createClient()
     sb.auth.getUser().then(({ data }) => setUser(data.user))
     const { data: { subscription } } = sb.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null)
+      router.refresh()
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  const handleLogout = async () => {
+    const sb = createClient()
+    await sb.auth.signOut()
+    setUser(null)
+    router.refresh()
+    router.push('/')
+  }
 
   return (
     <div style={{
@@ -43,7 +53,7 @@ export default function TopBar() {
                 👤 {user.user_metadata?.name ?? '마이페이지'}
               </Link>
               <span style={{ color: 'var(--gray-700)' }}>|</span>
-              <button onClick={() => logout()} style={{
+              <button onClick={handleLogout} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', padding: 0, transition: 'color 0.2s',
               }}
