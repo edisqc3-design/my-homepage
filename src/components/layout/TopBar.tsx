@@ -7,9 +7,14 @@ import { createClient } from '@/lib/supabase-browser'
 import { checkIsAdmin } from '@/lib/auth-actions'
 import type { User } from '@supabase/supabase-js'
 
-export default function TopBar() {
-  const [user, setUser] = useState<User | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+interface TopBarProps {
+  initialUser: User | null
+  initialIsAdmin: boolean
+}
+
+export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
+  const [user, setUser] = useState<User | null>(initialUser)
+  const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -18,24 +23,17 @@ export default function TopBar() {
   useEffect(() => {
     const sb = createClient()
 
-    if (!isAuthPage) {
-      sb.auth.getUser().then(({ data }) => {
-        setUser(data.user)
-        if (data.user) {
-          checkIsAdmin().then(setIsAdmin)
-        }
-      })
-    }
-
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       if (isAuthPage && event === 'SIGNED_IN') return
-      setUser(session?.user ?? null)
-      if (session?.user) {
+      const nextUser = session?.user ?? null
+      setUser(nextUser)
+      if (nextUser) {
         checkIsAdmin().then(setIsAdmin)
       } else {
         setIsAdmin(false)
       }
     })
+
     return () => subscription.unsubscribe()
   }, [isAuthPage])
 
