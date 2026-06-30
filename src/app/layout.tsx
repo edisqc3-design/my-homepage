@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import TopBar from '@/components/layout/TopBar'
 import Header from '@/components/layout/Header'
@@ -6,6 +6,11 @@ import Footer from '@/components/layout/Footer'
 import ScrollToTop from '@/components/ui/ScrollToTop'
 import { getSiteSettings } from '@/lib/queries'
 import { getUser, checkIsAdminForUser } from '@/lib/auth-actions'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
