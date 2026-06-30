@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { GalleryItem } from '@/types'
@@ -15,7 +15,7 @@ function GalleryCard({ item }: { item: GalleryItem }) {
   const [hovered, setHovered] = useState(false)
 
   return (
-    <Link href={`/gallery/${item.id}`} style={{ display: 'block', flex: '0 0 auto', width: '270px' }} className="gallery-slide-card">
+    <Link href={`/gallery/${item.id}`} style={{ display: 'block' }} className="gallery-slide-card">
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -29,7 +29,7 @@ function GalleryCard({ item }: { item: GalleryItem }) {
         }}
       >
         {/* 이미지 */}
-        <div style={{ width: '100%', height: '180px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
+        <div style={{ width: '100%', height: '240px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
           {item.image_url ? (
             <Image
               src={item.image_url}
@@ -103,14 +103,31 @@ function GalleryCard({ item }: { item: GalleryItem }) {
 
 export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null)
-  if (!items.length) return null
+  const [paused, setPaused] = useState(false)
+  const showArrows = items.length > 4
 
-  const scrollByCards = (dir: -1 | 1) => {
+  const scrollByPage = (dir: -1 | 1) => {
     const el = scrollerRef.current
     if (!el) return
-    const cardWidth = 270 + 20 // card width + gap
-    el.scrollBy({ left: dir * cardWidth * 2, behavior: 'smooth' })
+    const maxScroll = el.scrollWidth - el.clientWidth
+    if (dir === 1 && el.scrollLeft >= maxScroll - 4) {
+      el.scrollTo({ left: 0, behavior: 'smooth' })
+      return
+    }
+    if (dir === -1 && el.scrollLeft <= 4) {
+      el.scrollTo({ left: maxScroll, behavior: 'smooth' })
+      return
+    }
+    el.scrollBy({ left: dir * el.clientWidth, behavior: 'smooth' })
   }
+
+  useEffect(() => {
+    if (!showArrows || paused) return
+    const id = setInterval(() => scrollByPage(1), 4000)
+    return () => clearInterval(id)
+  }, [showArrows, paused])
+
+  if (!items.length) return null
 
   return (
     <section className="section-gap">
@@ -121,34 +138,43 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
           <p>전국 다양한 현장의 시공 실적을 확인하세요</p>
         </div>
 
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            onClick={() => scrollByCards(-1)}
-            aria-label="이전 시공사례"
-            className="gallery-slide-arrow gallery-slide-arrow-left"
-            style={arrowStyle('left')}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-          </button>
+        <div
+          style={{ position: 'relative' }}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}>
+          {showArrows && (
+            <button
+              type="button"
+              onClick={() => scrollByPage(-1)}
+              aria-label="이전 시공사례"
+              className="gallery-slide-arrow gallery-slide-arrow-left"
+              style={arrowStyle('left')}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+          )}
 
           <div
             ref={scrollerRef}
             style={{
-              display: 'flex', gap: '20px', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              display: 'flex', gap: '20px',
+              overflowX: showArrows ? 'auto' : 'hidden',
+              scrollSnapType: showArrows ? 'x mandatory' : undefined,
               paddingBottom: '8px', scrollbarWidth: 'none',
             }}
             className="gallery-scroller">
             {items.map(item => <GalleryCard key={item.id} item={item} />)}
           </div>
 
-          <button
-            type="button"
-            onClick={() => scrollByCards(1)}
-            aria-label="다음 시공사례"
-            className="gallery-slide-arrow gallery-slide-arrow-right"
-            style={arrowStyle('right')}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-          </button>
+          {showArrows && (
+            <button
+              type="button"
+              onClick={() => scrollByPage(1)}
+              aria-label="다음 시공사례"
+              className="gallery-slide-arrow gallery-slide-arrow-right"
+              style={arrowStyle('right')}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
+          )}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
@@ -158,9 +184,17 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
 
       <style>{`
         .gallery-scroller::-webkit-scrollbar { display: none; }
-        .gallery-slide-card { scroll-snap-align: start; }
-        @media (max-width: 640px) {
+        .gallery-slide-card {
+          scroll-snap-align: start;
+          flex: 0 0 calc((100% - 60px) / 4);
+        }
+        @media (max-width: 900px) {
           .gallery-slide-arrow { display: none !important; }
+          .gallery-scroller { overflow-x: auto !important; }
+          .gallery-slide-card { flex: 0 0 calc((100% - 20px) / 2) !important; }
+        }
+        @media (max-width: 480px) {
+          .gallery-slide-card { flex: 0 0 86% !important; }
         }
       `}</style>
     </section>
