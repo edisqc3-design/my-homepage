@@ -78,19 +78,8 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
     return (
       <header style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'var(--navy)' }}>
         <div className="container" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '72px',
+          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: '72px',
         }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '36px', height: '36px', background: 'var(--gold)', borderRadius: '6px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 900, fontSize: '1.1rem', color: 'var(--navy)',
-            }}>W</div>
-            <span style={{ color: 'var(--white)', fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>
-              우드자재<span style={{ color: 'var(--gold)' }}>닷컴</span>
-            </span>
-          </Link>
-
           {user && isAdmin && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Link href="/admin" style={{
