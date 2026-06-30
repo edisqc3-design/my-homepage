@@ -13,7 +13,6 @@ export type HeroSlide = {
   is_active: boolean
   created_at: string
 }
-
 export type BusinessCard = {
   id: string
   sort_order: number
@@ -24,13 +23,11 @@ export type BusinessCard = {
   is_active: boolean
   created_at: string
 }
-
 export type WideBoxItem = {
   icon: string
   title: string
   desc: string
 }
-
 export type WideBoxSetting = {
   id: string
   tag: string | null
@@ -44,19 +41,18 @@ export type WideBoxSetting = {
   cta2_href: string | null
   updated_at: string
 }
-
 export type GalleryItem = {
   id: string
   sort_order: number
   title: string
   category: string | null
   image_url: string | null
+  image_urls: string[] | null
   description: string | null
   project_date: string | null
   is_active: boolean
   created_at: string
 }
-
 export type Product = {
   id: string
   sort_order: number
@@ -68,7 +64,6 @@ export type Product = {
   is_active: boolean
   created_at: string
 }
-
 export type Notice = {
   id: string
   title: string
@@ -77,7 +72,6 @@ export type Notice = {
   is_active: boolean
   created_at: string
 }
-
 export type Inquiry = {
   id: string
   name: string
@@ -91,7 +85,6 @@ export type Inquiry = {
   replied_at: string | null
   created_at: string
 }
-
 export type PublicInquiry = {
   id: string
   category: string | null
@@ -100,7 +93,6 @@ export type PublicInquiry = {
   admin_reply: string | null
   created_at: string
 }
-
 export type Faq = {
   id: string
   sort_order: number
@@ -110,7 +102,6 @@ export type Faq = {
   is_active: boolean
   created_at: string
 }
-
 export type Download = {
   id: string
   sort_order: number
@@ -123,7 +114,6 @@ export type Download = {
   is_active: boolean
   created_at: string
 }
-
 export type Partner = {
   id: string
   sort_order: number
@@ -132,7 +122,6 @@ export type Partner = {
   is_active: boolean
   created_at: string
 }
-
 export type SiteSetting = {
   key: string
   value: string | null
