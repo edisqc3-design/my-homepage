@@ -42,11 +42,6 @@ export async function incrementDownload(id: string) {
 
 import { revalidatePath } from 'next/cache'
 
-export async function toggleBusinessCard(id: string, isActive: boolean) {
-  const sb = getSupabase()
-  if (!sb) return { success: false }
-  const { error } = await sb.from('business_cards').update({ is_active: isActive }).eq('id', id)
-  if (error) return { success: false }
+export async function revalidateHome() {
   revalidatePath('/')
-  return { success: true }
 }
