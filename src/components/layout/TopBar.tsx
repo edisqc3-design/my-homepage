@@ -17,8 +17,6 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
   const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
   const router = useRouter()
 
-  // 서버에서 내려온 최신 initialIsAdmin을 ref로 추적
-  // props가 바뀔 때(router.refresh 후 서버 재렌더) 클라이언트 상태도 동기화
   const initialIsAdminRef = useRef(initialIsAdmin)
   useEffect(() => {
     if (initialIsAdminRef.current !== initialIsAdmin) {
@@ -32,28 +30,18 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
 
   useEffect(() => {
     const sb = createClient()
-
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return
-
       const nextUser = session?.user ?? null
-
       if (!nextUser) {
         setUser(null)
         setIsAdmin(false)
         return
       }
-
-      // SIGNED_IN: user와 isAdmin을 함께 갱신해야 "일반회원 -> 관리자" 깜빡임이 안 생김.
-      // router.refresh()로 서버가 새 initialIsAdmin을 내려주면 props 변경 useEffect가
-      // user/isAdmin을 동시에 맞춰주므로, 여기서는 user를 먼저 set하지 않고 기다린다.
       if (event === 'SIGNED_IN') return
-
-      // TOKEN_REFRESHED 등 다른 이벤트는 user 변경이 없으므로 isAdmin만 재확인
       setUser(nextUser)
       checkIsAdmin().then(setIsAdmin)
     })
-
     return () => subscription.unsubscribe()
   }, [])
 
@@ -83,28 +71,9 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
 
         {/* 우측: 메뉴 */}
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          {user ? (
-            <>
-              {!isAdmin && (
-                <>
-                  <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
-                    👤 {user.user_metadata?.name ?? '마이페이지'}
-                  </Link>
-                  <span style={{ color: 'var(--gray-700)' }}>|</span>
-                  <button onClick={handleLogout} style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', padding: 0, transition: 'color 0.2s',
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
-                    로그아웃
-                  </button>
-                </>
-              )}
-            </>
-          ) : (
+
+          {/* 비로그인: 로그인 + 회원가입 */}
+          {!user && (
             <>
               <Link href="/auth/login" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
@@ -116,9 +85,32 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
                 onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
                 회원가입
               </Link>
+              <span style={{ color: 'var(--gray-700)' }}>|</span>
             </>
           )}
-          <span style={{ color: 'var(--gray-700)' }}>|</span>
+
+          {/* 일반회원: 마이페이지 + 로그아웃 */}
+          {user && !isAdmin && (
+            <>
+              <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
+                👤 {user.user_metadata?.name ?? '마이페이지'}
+              </Link>
+              <button onClick={handleLogout} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', padding: 0, transition: 'color 0.2s',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
+                로그아웃
+              </button>
+              <span style={{ color: 'var(--gray-700)' }}>|</span>
+            </>
+          )}
+
+          {/* 관리자: 아무것도 표시 안 함 (관리자 패널에서 처리) */}
+
           <Link href="/faq" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
