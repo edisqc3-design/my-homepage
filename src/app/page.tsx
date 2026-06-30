@@ -7,11 +7,13 @@ import {
   getPartners,
   getSiteSettings,
   getPublicInquiries,
+  getProducts,
 } from '@/lib/queries'
 
 import HeroSlider from '@/components/sections/HeroSlider'
 import BusinessCards from '@/components/sections/BusinessCards'
 import WideBox from '@/components/sections/WideBox'
+import ProductsGrid from '@/components/sections/ProductsGrid'
 import GalleryGrid from '@/components/sections/GalleryGrid'
 import CtaBanner from '@/components/sections/CtaBanner'
 import RecentPosts from '@/components/sections/RecentPosts'
@@ -28,10 +30,11 @@ function isSectionVisible(settings: Record<string, string>, key: string) {
 }
 
 export default async function HomePage() {
-  const [slides, cards, wideBox, gallery, notices, partners, settings, inquiries] = await Promise.all([
+  const [slides, cards, wideBox, products, gallery, notices, partners, settings, inquiries] = await Promise.all([
     getHeroSlides(),
     getBusinessCards(),
     getWideBoxSetting(),
+    getProducts(),
     getGalleryItems(12),
     getNotices(5),
     getPartners(),
@@ -44,6 +47,7 @@ export default async function HomePage() {
       {isSectionVisible(settings, 'section_hero') && <HeroSlider slides={slides} />}
       {isSectionVisible(settings, 'section_business_cards') && <BusinessCards cards={cards} />}
       {isSectionVisible(settings, 'section_wide_box') && <WideBox data={wideBox} />}
+      {isSectionVisible(settings, 'section_products') && <ProductsGrid products={products.slice(0, 8)} />}
       {isSectionVisible(settings, 'section_gallery') && <GalleryGrid items={gallery} />}
       <CtaBanner />
       {isSectionVisible(settings, 'section_recent_posts') && <RecentPosts notices={notices} inquiries={inquiries} />}
