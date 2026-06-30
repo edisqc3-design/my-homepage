@@ -60,11 +60,22 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
         {items.map(item => (
           <AdminCard key={item.id} style={{ padding: '0', overflow: 'hidden' }}>
-            <div style={{ height: '140px', background: 'linear-gradient(135deg, #1e3a5f, #0a1628)', position: 'relative' }}>
+            <div
+              onClick={() => window.open(`/gallery/${item.id}`, '_blank')}
+              title="메인 사이트에서 보기"
+              style={{ height: '140px', background: 'linear-gradient(135deg, #1e3a5f, #0a1628)', position: 'relative', cursor: 'pointer' }}>
               {item.image_url
                 ? <img src={item.image_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '2rem', opacity: 0.3 }}>🏗️</div>
               }
+              <span style={{
+                position: 'absolute', bottom: '8px', right: '8px',
+                width: '24px', height: '24px', borderRadius: '6px',
+                background: 'rgba(10,22,40,0.6)', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
+              </span>
               <span style={{
                 position: 'absolute', top: '8px', left: '8px',
                 padding: '2px 8px', background: 'rgba(0,0,0,0.6)', color: '#fff',
