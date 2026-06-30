@@ -70,7 +70,7 @@ export default async function HomePage() {
     section_business_cards: <BusinessCards cards={cards} />,
     section_wide_box: <WideBox data={wideBox} />,
     section_products: <ProductsGrid products={products.slice(0, 8)} />,
-    section_gallery: <GalleryGrid items={gallery} />,
+    section_gallery: <GalleryGrid items={gallery} displayMode={settings.gallery_display_mode ?? 'card'} />,
     section_recent_posts: <RecentPosts notices={notices} inquiries={inquiries} />,
     section_customer_support: <CustomerSupport settings={settings} />,
     section_partners: <Partners partners={partners} />,
