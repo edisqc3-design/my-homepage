@@ -74,60 +74,9 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
   }, [])
 
   // 관리자 페이지: 공개 사이트 메뉴/CTA는 숨기고, 로고 + 관리자 배지 + 로그아웃만 남긴 간소화된 헤더 표시
-  if (isAdminPage) {
-    return (
-      <header style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'var(--navy)' }}>
-        <div className="container" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: '72px',
-        }}>
-          {user && isAdmin && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Link href="/admin" style={{
-                padding: '3px 10px', background: 'rgba(201,168,76,0.15)', color: '#c9a84c',
-                fontSize: '0.72rem', fontWeight: 700, borderRadius: '10px', textDecoration: 'none',
-              }}>
-                👑 최고관리자
-              </Link>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '30px', height: '30px', borderRadius: '50%',
-                  background: 'var(--gold)', color: 'var(--navy)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 900, fontSize: '0.85rem',
-                }}>
-                  {(user.user_metadata?.name ?? user.email ?? 'A')[0].toUpperCase()}
-                </div>
-                <div>
-                  <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--white)', lineHeight: 1.2 }}>
-                    {user.user_metadata?.name ?? 'admin'}
-                  </p>
-                  <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>{user.email}</p>
-                </div>
-              </div>
-              <button onClick={() => logout()} style={{
-                padding: '5px 12px', borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
-                color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(230,57,70,0.15)'
-                  e.currentTarget.style.color = '#e63946'
-                  e.currentTarget.style.borderColor = 'rgba(230,57,70,0.4)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
-                }}>
-                로그아웃
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
-    )
-  }
+  // 관리자 페이지는 AdminHeader(흰 배경, 페이지 제목 + 관리자 정보)를 별도로 사용하므로
+  // 공개 사이트 헤더는 렌더링하지 않음
+  if (isAdminPage) return null
 
   return (
     <header style={{
