@@ -85,28 +85,24 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           {user ? (
             <>
-              {isAdmin ? (
-                <Link href="/admin" style={{ color: 'var(--gold)', fontWeight: 700, transition: 'color 0.2s' }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                  🔧 관리자
-                </Link>
-              ) : (
-                <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
-                  👤 {user.user_metadata?.name ?? '마이페이지'}
-                </Link>
+              {!isAdmin && (
+                <>
+                  <Link href="/mypage" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
+                    👤 {user.user_metadata?.name ?? '마이페이지'}
+                  </Link>
+                  <span style={{ color: 'var(--gray-700)' }}>|</span>
+                  <button onClick={handleLogout} style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', padding: 0, transition: 'color 0.2s',
+                  }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
+                    로그아웃
+                  </button>
+                </>
               )}
-              <span style={{ color: 'var(--gray-700)' }}>|</span>
-              <button onClick={handleLogout} style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', padding: 0, transition: 'color 0.2s',
-              }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
-                로그아웃
-              </button>
             </>
           ) : (
             <>
