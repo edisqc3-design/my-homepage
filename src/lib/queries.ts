@@ -35,10 +35,12 @@ export async function getWideBoxSetting(): Promise<WideBoxSetting | null> {
   return data
 }
 
-export async function getGalleryItems(limit = 8): Promise<GalleryItem[]> {
+export async function getGalleryItems(limit = 12): Promise<GalleryItem[]> {
   const sb = getSupabase()
   if (!sb) return []
-  const { data, error } = await sb.from('gallery').select('*').eq('is_active', true).order('sort_order').limit(limit)
+  const { data, error } = await sb.from('gallery').select('*').eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(limit)
   if (error) { console.error('getGalleryItems:', error); return [] }
   return data ?? []
 }
@@ -110,7 +112,8 @@ export async function getGalleryById(id: string): Promise<GalleryItem | null> {
 export async function getAllGallery(): Promise<GalleryItem[]> {
   const sb = getSupabase()
   if (!sb) return []
-  const { data, error } = await sb.from('gallery').select('*').eq('is_active', true).order('sort_order')
+  const { data, error } = await sb.from('gallery').select('*').eq('is_active', true)
+    .order('created_at', { ascending: false })
   if (error) { console.error('getAllGallery:', error); return [] }
   return data ?? []
 }
