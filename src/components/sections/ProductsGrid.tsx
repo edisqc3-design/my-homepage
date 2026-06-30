@@ -28,6 +28,7 @@ function ProductCard({ product }: { product: Product }) {
               src={product.image_url}
               alt={product.name}
               fill
+              sizes="(max-width: 480px) 100vw, 300px"
               style={{
                 objectFit: 'cover',
                 transform: hovered ? 'scale(1.08)' : 'scale(1)',
@@ -80,9 +81,6 @@ function ProductCard({ product }: { product: Product }) {
 export default function ProductsGrid({ products }: { products: Product[] }) {
   if (!products.length) return null
 
-  // 상품 개수가 4개보다 적으면 그 수만큼만 컬럼을 만들어 카드가 폭을 꽉 채우도록 함
-  const columns = Math.min(products.length, 4)
-
   return (
     <section className="section-gap">
       <div className="container">
@@ -92,8 +90,14 @@ export default function ProductsGrid({ products }: { products: Product[] }) {
           <p>엄선된 고품질 건축자재를 만나보세요</p>
         </div>
 
+        {/* 카드 너비를 240~300px 범위로 고정하고, 화면 폭에 맞춰 한 줄에 들어가는 개수가
+            자동으로 정해지도록 함(데스크탑 기준 보통 4개). 상품이 적어도 카드가 과도하게
+            늘어나지 않고, 많아지면 자연스럽게 다음 줄로 넘어감. */}
         <div className="products-grid" style={{
-          display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '20px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 300px))',
+          gap: '20px',
+          justifyContent: 'center',
         }}>
           {products.map(product => <ProductCard key={product.id} product={product} />)}
         </div>
@@ -104,8 +108,7 @@ export default function ProductsGrid({ products }: { products: Product[] }) {
       </div>
 
       <style>{`
-        @media (max-width: 900px) { .products-grid { grid-template-columns: repeat(${Math.min(columns, 2)}, 1fr) !important; } }
-        @media (max-width: 480px) { .products-grid { grid-template-columns: 1fr !important; } }
+        @media (max-width: 480px) { .products-grid { grid-template-columns: minmax(0, 1fr) !important; } }
       `}</style>
     </section>
   )
