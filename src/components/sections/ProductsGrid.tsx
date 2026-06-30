@@ -82,7 +82,7 @@ export default function ProductsGrid({ products }: { products: Product[] }) {
   if (!products.length) return null
 
   return (
-    <section className="section-gap">
+    <section className="section-gap section-surface-warm">
       <div className="container">
         <div className="center-heading">
           <h2>제품소개</h2>
