@@ -133,7 +133,7 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
   if (!items.length) return null
 
   return (
-    <section className="section-gap">
+    <section className="section-gap section-surface-cool">
       <div className="container">
         <div className="center-heading">
           <h2>시공 사례</h2>
