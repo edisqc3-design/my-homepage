@@ -66,6 +66,7 @@ const SECTION_TOGGLES = [
   { key: 'section_hero', label: '슬라이더', desc: '메인 상단 히어로 슬라이드' },
   { key: 'section_business_cards', label: '비즈니스 카드', desc: '사업안내 카드 섹션' },
   { key: 'section_wide_box', label: '와이드박스', desc: '와이드 배너 섹션' },
+  { key: 'section_products', label: '제품소개', desc: '메인 제품소개 섹션' },
   { key: 'section_gallery', label: '시공사례', desc: '시공사례 갤러리 섹션' },
   { key: 'section_recent_posts', label: '공지사항 / 문의', desc: '최근 공지·문의 목록 섹션' },
   { key: 'section_customer_support', label: '고객지원', desc: '연락처/영업시간 등 고객지원 섹션' },
