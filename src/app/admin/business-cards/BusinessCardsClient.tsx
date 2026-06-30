@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { toggleBusinessCard } from '@/lib/actions'
+import { revalidateHome } from '@/lib/actions'
 import { AdminSection, AdminCard, Btn, Input, Textarea, Toggle, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { BusinessCard } from '@/types'
 
@@ -30,11 +30,11 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
     if (isNew) {
       const { data, error } = await sb.from('business_cards').insert([{ ...editing, sort_order: cards.length + 1 }]).select().single()
       if (error) showToast('저장 실패', 'error')
-      else { setCards(p => [...p, data]); showToast('카드 추가 완료') }
+      else { setCards(p => [...p, data]); showToast('카드 추가 완료'); revalidateHome() }
     } else {
       const { error } = await sb.from('business_cards').update(editing).eq('id', editing.id!)
       if (error) showToast('저장 실패', 'error')
-      else { setCards(p => p.map(c => c.id === editing.id ? { ...c, ...editing } as BusinessCard : c)); showToast('카드 수정 완료') }
+      else { setCards(p => p.map(c => c.id === editing.id ? { ...c, ...editing } as BusinessCard : c)); showToast('카드 수정 완료'); revalidateHome() }
     }
     setSaving(false); setEditing(null); setIsNew(false)
   }
@@ -43,7 +43,7 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
     if (!deleteTarget) return
     const { error } = await sb.from('business_cards').delete().eq('id', deleteTarget)
     if (error) showToast('삭제 실패', 'error')
-    else { setCards(p => p.filter(c => c.id !== deleteTarget)); showToast('삭제 완료') }
+    else { setCards(p => p.filter(c => c.id !== deleteTarget)); showToast('삭제 완료'); revalidateHome() }
     setDeleteTarget(null)
   }
 
@@ -58,6 +58,7 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
       sb.from('business_cards').update({ sort_order: idx + 1 }).eq('id', next[idx].id),
       sb.from('business_cards').update({ sort_order: swapIdx + 1 }).eq('id', next[swapIdx].id),
     ])
+    revalidateHome()
   }
 
   return (
@@ -75,8 +76,14 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
             <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '4px' }}>
               <Toggle value={card.is_active} onChange={async () => {
                 const newValue = !card.is_active
-                await toggleBusinessCard(card.id, newValue)
                 setCards(p => p.map(c => c.id === card.id ? { ...c, is_active: newValue } : c))
+                const { error } = await sb.from('business_cards').update({ is_active: newValue }).eq('id', card.id)
+                if (error) {
+                  setCards(p => p.map(c => c.id === card.id ? { ...c, is_active: !newValue } : c))
+                  showToast('변경 실패', 'error')
+                } else {
+                  revalidateHome()
+                }
               }} />
             </div>
             <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{card.icon}</div>
