@@ -32,7 +32,7 @@ export default async function HomePage() {
     getHeroSlides(),
     getBusinessCards(),
     getWideBoxSetting(),
-    getGalleryItems(8),
+    getGalleryItems(12),
     getNotices(5),
     getPartners(),
     getSiteSettings(),
