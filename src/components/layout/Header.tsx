@@ -183,10 +183,14 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
             {mobileOpen ? '✕' : '☰'}
           </button>
         </div>
+      </div>
 
-        {/* 관리자 정보 (관리자 페이지에서만, 맨 우측 고정) */}
-        {user && isAdmin && isAdminPage && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto' }} className="hidden-mobile">
+      {/* 관리자 정보 (관리자 페이지에서만) — .container의 1200px 제한과 무관하게 헤더의 실제 우측 끝에 고정 */}
+      {user && isAdmin && isAdminPage && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          position: 'absolute', top: '50%', right: '24px', transform: 'translateY(-50%)',
+        }} className="hidden-mobile">
             <Link href="/admin" style={{
               padding: '3px 10px',
               background: 'rgba(201,168,76,0.15)',
@@ -232,7 +236,6 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
             </button>
           </div>
         )}
-      </div>
 
       {/* Mobile Nav */}
       {mobileOpen && (
