@@ -1,8 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase-browser'
-import { revalidateHome } from '@/lib/actions'
+import {
+  createBusinessCard,
+  updateBusinessCard,
+  deleteBusinessCard,
+  updateBusinessCardOrder,
+  updateBusinessCardsActive,
+} from '@/lib/content-actions'
 import { AdminSection, AdminCard, Btn, Input, Textarea, Toggle, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { BusinessCard } from '@/types'
 
@@ -20,7 +25,6 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set())
   const [savingAll, setSavingAll] = useState(false)
 
-  const sb = createClient()
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type })
     setTimeout(() => setToast(null), 3000)
@@ -30,22 +34,22 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
     if (!editing?.title) { showToast('제목을 입력해 주세요.', 'error'); return }
     setSaving(true)
     if (isNew) {
-      const { data, error } = await sb.from('business_cards').insert([{ ...editing, sort_order: cards.length + 1 }]).select().single()
-      if (error) showToast('저장 실패', 'error')
-      else { setCards(p => [...p, data]); showToast('카드 추가 완료'); revalidateHome() }
+      const result = await createBusinessCard({ ...editing, sort_order: cards.length + 1 })
+      if (!result.success) showToast('저장 실패', 'error')
+      else { setCards(p => [...p, result.data]); showToast('카드 추가 완료') }
     } else {
-      const { error } = await sb.from('business_cards').update(editing).eq('id', editing.id!)
-      if (error) showToast('저장 실패', 'error')
-      else { setCards(p => p.map(c => c.id === editing.id ? { ...c, ...editing } as BusinessCard : c)); showToast('카드 수정 완료'); revalidateHome() }
+      const result = await updateBusinessCard(editing.id!, editing)
+      if (!result.success) showToast('저장 실패', 'error')
+      else { setCards(p => p.map(c => c.id === editing.id ? { ...c, ...editing } as BusinessCard : c)); showToast('카드 수정 완료') }
     }
     setSaving(false); setEditing(null); setIsNew(false)
   }
 
   const handleDelete = async () => {
     if (!deleteTarget) return
-    const { error } = await sb.from('business_cards').delete().eq('id', deleteTarget)
-    if (error) showToast('삭제 실패', 'error')
-    else { setCards(p => p.filter(c => c.id !== deleteTarget)); showToast('삭제 완료'); revalidateHome() }
+    const result = await deleteBusinessCard(deleteTarget)
+    if (!result.success) showToast('삭제 실패', 'error')
+    else { setCards(p => p.filter(c => c.id !== deleteTarget)); showToast('삭제 완료') }
     setDeleteTarget(null)
   }
 
@@ -56,28 +60,27 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
     const next = [...cards];
     [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]]
     setCards(next)
-    await Promise.all([
-      sb.from('business_cards').update({ sort_order: idx + 1 }).eq('id', next[idx].id),
-      sb.from('business_cards').update({ sort_order: swapIdx + 1 }).eq('id', next[swapIdx].id),
+    const result = await updateBusinessCardOrder([
+      { id: next[idx].id, sort_order: idx + 1 },
+      { id: next[swapIdx].id, sort_order: swapIdx + 1 },
     ])
-    revalidateHome()
+    if (!result.success) showToast('순서 변경 실패', 'error')
   }
 
   const handleSaveAll = async () => {
     if (dirtyIds.size === 0) return
     setSavingAll(true)
     const ids = Array.from(dirtyIds)
-    const results = await Promise.all(ids.map(id => {
+    const updates = ids.map(id => {
       const card = cards.find(c => c.id === id)!
-      return sb.from('business_cards').update({ is_active: card.is_active }).eq('id', id)
-    }))
-    const hasError = results.some(r => r.error)
-    if (hasError) {
+      return { id, is_active: card.is_active }
+    })
+    const result = await updateBusinessCardsActive(updates)
+    if (!result.success) {
       showToast('일부 항목 저장에 실패했습니다.', 'error')
     } else {
       showToast('변경사항이 저장되었습니다.')
       setDirtyIds(new Set())
-      revalidateHome()
     }
     setSavingAll(false)
   }
