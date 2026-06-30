@@ -29,7 +29,7 @@ function GalleryCard({ item }: { item: GalleryItem }) {
         }}
       >
         {/* 이미지 */}
-        <div style={{ width: '100%', height: '240px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
+        <div style={{ width: '100%', height: '160px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
           {item.image_url ? (
             <Image
               src={item.image_url}
@@ -104,7 +104,7 @@ function GalleryCard({ item }: { item: GalleryItem }) {
 export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
-  const showArrows = items.length > 4
+  const showArrows = items.length > 8
 
   const scrollByPage = (dir: -1 | 1) => {
     const el = scrollerRef.current
@@ -186,7 +186,7 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
         .gallery-scroller::-webkit-scrollbar { display: none; }
         .gallery-slide-card {
           scroll-snap-align: start;
-          flex: 0 0 calc((100% - 60px) / 4);
+          flex: 0 0 calc((100% - 140px) / 8);
         }
         @media (max-width: 900px) {
           .gallery-slide-arrow { display: none !important; }
