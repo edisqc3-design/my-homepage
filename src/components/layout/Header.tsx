@@ -184,9 +184,9 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
           </button>
         </div>
 
-        {/* 관리자 정보 (관리자 페이지에서만, 맨 우측) */}
+        {/* 관리자 정보 (관리자 페이지에서만, 맨 우측 고정) */}
         {user && isAdmin && isAdminPage && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="hidden-mobile">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto' }} className="hidden-mobile">
             <Link href="/admin" style={{
               padding: '3px 10px',
               background: 'rgba(201,168,76,0.15)',
