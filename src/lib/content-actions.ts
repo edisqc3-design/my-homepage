@@ -111,6 +111,23 @@ export async function updatePartnerOrder(
   return { success: true, data: undefined }
 }
 
+// ──────────────────────────── Site Settings ────────────────────────────
+
+export async function updateSiteSettings(
+  settings: Record<string, string>
+): Promise<ActionResult> {
+  const sb = getAdminClient()
+  const upserts = Object.entries(settings).map(([key, value]) => ({
+    key,
+    value,
+    updated_at: new Date().toISOString(),
+  }))
+  const { error } = await sb.from('site_settings').upsert(upserts, { onConflict: 'key' })
+  if (error) return { success: false, error: error.message }
+  revalidatePath('/')
+  return { success: true, data: undefined }
+}
+
 export async function updatePartnersActive(
   updates: { id: string; is_active: boolean }[]
 ): Promise<ActionResult> {
