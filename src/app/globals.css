@@ -81,3 +81,20 @@ img { max-width: 100%; height: auto; }
 
 .admin-inquiry-row { transition: border-color 0.15s; }
 .admin-inquiry-row:hover { border-color: #c9a84c; }
+
+/* 메인화면 섹션 구분용 — 톤이 미묘하게 다른 배경 + 골드 디바이더로 섹션 경계를 고급스럽게 표시 */
+.section-surface-warm {
+  position: relative;
+  background: linear-gradient(180deg, #fbfaf6 0%, #f5f2ea 100%);
+}
+.section-surface-cool {
+  position: relative;
+  background: linear-gradient(180deg, #f8f9fb 0%, #f1f3f7 100%);
+}
+.section-surface-warm::before,
+.section-surface-cool::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 96px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
