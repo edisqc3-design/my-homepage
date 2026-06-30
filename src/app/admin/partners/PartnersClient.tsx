@@ -1,8 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase-browser'
-import { revalidateHome } from '@/lib/actions'
+import {
+  createPartner,
+  updatePartner,
+  deletePartner,
+  updatePartnerOrder,
+  updatePartnersActive,
+} from '@/lib/content-actions'
 import { AdminSection, AdminCard, Btn, Input, Toggle, ImageUploader, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { Partner } from '@/types'
 
@@ -16,7 +21,6 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set())
   const [savingAll, setSavingAll] = useState(false)
 
-  const sb = createClient()
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type }); setTimeout(() => setToast(null), 3000)
   }
@@ -25,22 +29,23 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
     if (!editing?.name) { showToast('회사명을 입력해 주세요.', 'error'); return }
     setSaving(true)
     if (isNew) {
-      const { data, error } = await sb.from('partners').insert([{ ...editing, sort_order: partners.length + 1 }]).select().single()
-      if (error) showToast('저장 실패', 'error')
-      else { setPartners(p => [...p, data]); showToast('파트너 추가 완료'); revalidateHome() }
+      const result = await createPartner({ ...editing, sort_order: partners.length + 1 })
+      if (!result.success) showToast('저장 실패', 'error')
+      else { setPartners(p => [...p, result.data]); showToast('파트너 추가 완료') }
     } else {
-      const { error } = await sb.from('partners').update(editing).eq('id', editing.id!)
-      if (error) showToast('저장 실패', 'error')
-      else { setPartners(p => p.map(x => x.id === editing.id ? { ...x, ...editing } as Partner : x)); showToast('파트너 수정 완료'); revalidateHome() }
+      const result = await updatePartner(editing.id!, editing)
+      if (!result.success) showToast('저장 실패', 'error')
+      else { setPartners(p => p.map(x => x.id === editing.id ? { ...x, ...editing } as Partner : x)); showToast('파트너 수정 완료') }
     }
     setSaving(false); setEditing(null); setIsNew(false)
   }
 
   const handleDelete = async () => {
     if (!deleteTarget) return
-    await sb.from('partners').delete().eq('id', deleteTarget)
+    const result = await deletePartner(deleteTarget)
+    if (!result.success) { showToast('삭제 실패', 'error'); setDeleteTarget(null); return }
     setPartners(p => p.filter(x => x.id !== deleteTarget))
-    showToast('삭제 완료'); setDeleteTarget(null); revalidateHome()
+    showToast('삭제 완료'); setDeleteTarget(null)
   }
 
   const handleOrder = async (id: string, dir: 'up' | 'down') => {
@@ -50,28 +55,27 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
     const next = [...partners];
     [next[idx], next[si]] = [next[si], next[idx]]
     setPartners(next)
-    await Promise.all([
-      sb.from('partners').update({ sort_order: idx + 1 }).eq('id', next[idx].id),
-      sb.from('partners').update({ sort_order: si + 1 }).eq('id', next[si].id),
+    const result = await updatePartnerOrder([
+      { id: next[idx].id, sort_order: idx + 1 },
+      { id: next[si].id, sort_order: si + 1 },
     ])
-    revalidateHome()
+    if (!result.success) showToast('순서 변경 실패', 'error')
   }
 
   const handleSaveAll = async () => {
     if (dirtyIds.size === 0) return
     setSavingAll(true)
     const ids = Array.from(dirtyIds)
-    const results = await Promise.all(ids.map(id => {
+    const updates = ids.map(id => {
       const partner = partners.find(x => x.id === id)!
-      return sb.from('partners').update({ is_active: partner.is_active }).eq('id', id)
-    }))
-    const hasError = results.some(r => r.error)
-    if (hasError) {
+      return { id, is_active: partner.is_active }
+    })
+    const result = await updatePartnersActive(updates)
+    if (!result.success) {
       showToast('일부 항목 저장에 실패했습니다.', 'error')
     } else {
       showToast('변경사항이 저장되었습니다.')
       setDirtyIds(new Set())
-      revalidateHome()
     }
     setSavingAll(false)
   }
