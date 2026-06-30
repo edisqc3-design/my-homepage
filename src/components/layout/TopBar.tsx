@@ -119,7 +119,7 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
               <Link href="/admin" style={{ color: 'var(--gold)', fontWeight: 700, transition: 'opacity 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
                 onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-                🔧 관리자
+                🔧 최고관리자
               </Link>
               <button onClick={handleLogout} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
