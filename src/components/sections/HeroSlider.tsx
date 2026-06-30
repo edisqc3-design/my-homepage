@@ -12,10 +12,12 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle')
   const [progress, setProgress] = useState(0)
-  const hovered = false
+  const [parallax, setParallax] = useState({ x: 0, y: 0 })
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startTimeRef = useRef<number>(Date.now())
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const touchStartX = useRef<number | null>(null)
 
   const goTo = useCallback((index: number, dir: 'next' | 'prev' = 'next') => {
     if (phase !== 'idle') return
@@ -43,9 +45,9 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
     goTo((current - 1 + slides.length) % slides.length, 'prev')
   }, [current, slides.length, goTo])
 
-  // 자동 슬라이드 + 프로그레스
+  // 자동 슬라이드 + 프로그레스 — 마우스 올려도 계속 자동재생됨 (기존 동작 유지, 변경하지 않음)
   useEffect(() => {
-    if (slides.length <= 1 || hovered) {
+    if (slides.length <= 1) {
       if (progressRef.current) clearInterval(progressRef.current)
       if (timerRef.current) clearTimeout(timerRef.current)
       return
@@ -66,7 +68,45 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
       if (progressRef.current) clearInterval(progressRef.current)
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [current, hovered, slides.length, goNext])
+  }, [current, slides.length, goNext])
+
+  // 키보드 좌우 화살표 네비게이션 (슬라이더가 화면에 보일 때만)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const el = sectionRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const inView = rect.top < window.innerHeight && rect.bottom > 0
+      if (!inView) return
+      if (e.key === 'ArrowRight') goNext()
+      if (e.key === 'ArrowLeft') goPrev()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [goNext, goPrev])
+
+  // 마우스 패럴랙스 — 자동재생과는 무관한 순수 시각 효과(배경/원/넘버가 마우스를 미세하게 따라감)
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2
+    setParallax({ x, y })
+  }
+  const handleMouseLeave = () => setParallax({ x: 0, y: 0 })
+
+  // 터치 스와이프 (모바일)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 50) {
+      if (dx < 0) goNext()
+      else goPrev()
+    }
+    touchStartX.current = null
+  }
 
   if (!slides.length) return null
 
@@ -84,29 +124,44 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
 
   return (
     <section
+      ref={sectionRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       style={{ position: 'relative', overflow: 'hidden', height: 'clamp(520px, 85vh, 760px)' }}
     >
       {/* ── 이전 슬라이드 (exit 애니메이션) ── */}
       {prevSlide && (
         <div style={{
-          position: 'absolute', inset: 0, zIndex: 1,
+          position: 'absolute', inset: '-2%', zIndex: 1,
           ...getBg(prevSlide),
           opacity: phase === 'exit' ? 0 : 1,
           transform: phase === 'exit'
-            ? `translateX(${direction === 'next' ? '-6%' : '6%'}) scale(1.04)`
-            : 'translateX(0) scale(1)',
+            ? `translateX(${direction === 'next' ? '-6%' : '6%'}) scale(1.08)`
+            : 'translateX(0) scale(1.04)',
           transition: 'opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.55s cubic-bezier(0.4,0,0.2,1)',
         }} />
       )}
 
-      {/* ── 현재 슬라이드 배경 ── */}
+      {/* ── 현재 슬라이드: 바깥 레이어(페이드)와 안쪽 레이어(켄번즈 줌+패럴랙스)를 분리해서 transform 충돌 방지 ── */}
       <div style={{
-        position: 'absolute', inset: 0, zIndex: 2,
-        ...getBg(slide),
+        position: 'absolute', inset: 0, zIndex: 2, overflow: 'hidden',
         opacity: phase === 'exit' ? 0 : 1,
-        transform: phase === 'enter' ? 'scale(1)' : phase === 'exit' ? 'scale(1.03)' : 'scale(1)',
-        transition: 'opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1)',
-      }} />
+        transition: 'opacity 0.6s cubic-bezier(0.4,0,0.2,1)',
+      }}>
+        <div key={current} style={{
+          position: 'absolute', inset: '-3%',
+          animation: `heroKenBurns ${SLIDE_DURATION + 700}ms ease-out forwards`,
+        }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            ...getBg(slide),
+            transform: `translate(${parallax.x * -6}px, ${parallax.y * -6}px)`,
+            transition: 'transform 0.3s ease-out',
+          }} />
+        </div>
+      </div>
 
       {/* ── 오버레이: 네이비 그라디언트 ── */}
       <div style={{
@@ -115,12 +170,14 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         pointerEvents: 'none',
       }} />
 
-      {/* ── 앰비언트: 골드 원형 + 회전 ── */}
+      {/* ── 앰비언트: 골드 원형 + 회전 (마우스 패럴랙스 적용) ── */}
       <div style={{
         position: 'absolute', right: '-100px', top: '-100px', zIndex: 4,
         width: '560px', height: '560px',
         border: '1px solid rgba(201,168,76,0.12)', borderRadius: '50%',
         animation: 'heroCircleSpin 28s linear infinite',
+        transform: `translate(${parallax.x * 10}px, ${parallax.y * 10}px)`,
+        transition: 'transform 0.4s ease-out',
         pointerEvents: 'none',
       }} />
       <div style={{
@@ -128,6 +185,8 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         width: '360px', height: '360px',
         border: '1px solid rgba(201,168,76,0.07)', borderRadius: '50%',
         animation: 'heroCircleSpin 18s linear infinite reverse',
+        transform: `translate(${parallax.x * 16}px, ${parallax.y * 16}px)`,
+        transition: 'transform 0.4s ease-out',
         pointerEvents: 'none',
       }} />
       {/* 대각선 골드 라인 */}
@@ -138,7 +197,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         pointerEvents: 'none',
       }} />
 
-      {/* ── 고스트 넘버 (우측) ── */}
+      {/* ── 고스트 넘버 (우측, 패럴랙스) ── */}
       <div style={{
         position: 'absolute', right: 'clamp(24px, 8vw, 120px)', bottom: '-20px', zIndex: 5,
         fontWeight: 900, letterSpacing: '-0.05em',
@@ -151,7 +210,7 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         opacity: phase === 'exit' ? 0 : 0.85,
         transform: phase === 'exit'
           ? `translateX(${direction === 'next' ? '-40px' : '40px'})`
-          : 'translateX(0)',
+          : `translate(${parallax.x * 14}px, ${parallax.y * 14}px)`,
       }}>
         {padNum(current)}
       </div>
@@ -322,13 +381,15 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
                     color: 'rgba(255,255,255,0.7)',
                     cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'color 0.2s',
+                    transition: 'color 0.2s, background 0.2s',
                   }}
                   onMouseEnter={e => {
                     (e.currentTarget as HTMLButtonElement).style.color = 'var(--gold)'
+                    ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(201,168,76,0.1)'
                   }}
                   onMouseLeave={e => {
                     (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.7)'
+                    ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
                   }}
                   aria-label={label}
                 >
@@ -348,8 +409,12 @@ export default function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
+        @keyframes heroKenBurns {
+          from { transform: scale(1); }
+          to   { transform: scale(1.12); }
+        }
         @media (prefers-reduced-motion: reduce) {
-          div[style*="heroCircleSpin"] { animation: none !important; }
+          div[style*="heroCircleSpin"], div[style*="heroKenBurns"] { animation: none !important; }
         }
       `}</style>
     </section>
