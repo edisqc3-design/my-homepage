@@ -142,7 +142,8 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
         </div>
 
         <div
-          style={{ position: 'relative' }}
+          style={{ position: 'relative', padding: '0 52px' }}
+          className="gallery-slide-wrapper"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}>
           {showArrows && (
@@ -197,6 +198,7 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
         .gallery-scroller::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
           .gallery-slide-arrow { display: none !important; }
+          .gallery-slide-wrapper { padding: 0 !important; }
           .gallery-scroller { overflow-x: auto !important; }
           .gallery-page { grid-template-columns: repeat(2, 1fr) !important; }
         }
@@ -210,7 +212,7 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
 
 function arrowStyle(side: 'left' | 'right'): React.CSSProperties {
   return {
-    position: 'absolute', top: '40%', [side]: '-18px', transform: 'translateY(-50%)',
+    position: 'absolute', top: '40%', [side]: '6px', transform: 'translateY(-50%)',
     width: '42px', height: '42px', borderRadius: '50%',
     background: 'var(--white)', color: 'var(--navy)', border: '1px solid var(--gray-200)',
     boxShadow: '0 8px 20px rgba(10,22,40,0.12)', cursor: 'pointer',
