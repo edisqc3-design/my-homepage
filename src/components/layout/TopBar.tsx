@@ -109,7 +109,25 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
             </>
           )}
 
-          {/* 관리자: 아무것도 표시 안 함 (관리자 패널에서 처리) */}
+          {/* 관리자: 관리자 링크 + 로그아웃 */}
+          {user && isAdmin && (
+            <>
+              <Link href="/admin" style={{ color: 'var(--gold)', fontWeight: 700, transition: 'opacity 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                🔧 관리자
+              </Link>
+              <button onClick={handleLogout} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', padding: 0, transition: 'color 0.2s',
+              }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}>
+                로그아웃
+              </button>
+              <span style={{ color: 'var(--gray-700)' }}>|</span>
+            </>
+          )}
 
           <Link href="/faq" style={{ color: 'rgba(255,255,255,0.55)', transition: 'color 0.2s' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
