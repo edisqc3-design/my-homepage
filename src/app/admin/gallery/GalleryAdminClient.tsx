@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import { AdminSection, AdminCard, Btn, Input, Textarea, Select, Toggle, ImageUploader, ConfirmModal, Toast } from '@/components/admin/AdminUI'
+import { AdminSection, AdminCard, Btn, Input, Textarea, Select, Toggle, MultiImageUploader, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { GalleryItem } from '@/types'
 
 const CATEGORIES = [
@@ -11,7 +11,7 @@ const CATEGORIES = [
   { value: '공공시설', label: '공공시설' },
 ]
 
-const EMPTY: Partial<GalleryItem> = { title: '', category: '상업시설', image_url: '', description: '', project_date: '', is_active: true }
+const EMPTY: Partial<GalleryItem> = { title: '', category: '상업시설', image_url: '', image_urls: [], description: '', project_date: '', is_active: true }
 
 export default function GalleryAdminClient({ initialItems }: { initialItems: GalleryItem[] }) {
   const [items, setItems] = useState<GalleryItem[]>(initialItems)
@@ -29,14 +29,15 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
   const handleSave = async () => {
     if (!editing?.title) { showToast('제목을 입력해 주세요.', 'error'); return }
     setSaving(true)
+    const payload = { ...editing, image_url: editing.image_urls?.[0] ?? null }
     if (isNew) {
-      const { data, error } = await sb.from('gallery').insert([{ ...editing, sort_order: items.length + 1 }]).select().single()
+      const { data, error } = await sb.from('gallery').insert([{ ...payload, sort_order: items.length + 1 }]).select().single()
       if (error) showToast('저장 실패', 'error')
       else { setItems(p => [...p, data]); showToast('시공사례 추가 완료') }
     } else {
-      const { error } = await sb.from('gallery').update(editing).eq('id', editing.id!)
+      const { error } = await sb.from('gallery').update(payload).eq('id', editing.id!)
       if (error) showToast('저장 실패', 'error')
-      else { setItems(p => p.map(x => x.id === editing.id ? { ...x, ...editing } as GalleryItem : x)); showToast('수정 완료') }
+      else { setItems(p => p.map(x => x.id === editing.id ? { ...x, ...payload } as GalleryItem : x)); showToast('수정 완료') }
     }
     setSaving(false); setEditing(null); setIsNew(false)
   }
@@ -83,7 +84,10 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
                   await sb.from('gallery').update({ is_active: !item.is_active }).eq('id', item.id)
                   setItems(p => p.map(x => x.id === item.id ? { ...x, is_active: !x.is_active } : x))
                 }} />
-                <Btn variant="secondary" size="sm" onClick={() => { setEditing({ ...item }); setIsNew(false) }}>수정</Btn>
+                <Btn variant="secondary" size="sm" onClick={() => {
+                  const urls = item.image_urls?.length ? item.image_urls : (item.image_url ? [item.image_url] : [])
+                  setEditing({ ...item, image_urls: urls }); setIsNew(false)
+                }}>수정</Btn>
                 <Btn variant="danger" size="sm" onClick={() => setDeleteTarget(item.id)}>삭제</Btn>
               </div>
             </div>
@@ -114,8 +118,8 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
               <Input label="시공 날짜" type="date" value={editing.project_date ?? ''} onChange={e => setEditing(p => ({ ...p!, project_date: e.target.value }))} />
               <Textarea label="설명" rows={3} value={editing.description ?? ''} onChange={e => setEditing(p => ({ ...p!, description: e.target.value }))} />
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>이미지</label>
-                <ImageUploader value={editing.image_url ?? ''} onChange={url => setEditing(p => ({ ...p!, image_url: url }))} folder="gallery" />
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>이미지 (여러 장 등록 가능)</label>
+                <MultiImageUploader value={editing.image_urls ?? []} onChange={urls => setEditing(p => ({ ...p!, image_urls: urls }))} folder="gallery" />
               </div>
               <Toggle value={editing.is_active ?? true} onChange={v => setEditing(p => ({ ...p!, is_active: v }))} label="활성화" />
             </div>
