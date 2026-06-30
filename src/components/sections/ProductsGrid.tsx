@@ -15,10 +15,10 @@ function ProductCard({ product }: { product: Product }) {
         onMouseLeave={() => setHovered(false)}
         style={{
           borderRadius: '14px', overflow: 'hidden',
-          border: '1px solid var(--gray-100)', background: 'var(--white)',
+          border: '1px solid var(--gray-300)', background: 'var(--white)',
           transition: 'box-shadow 0.3s, border-color 0.3s, transform 0.3s',
-          boxShadow: hovered ? '0 20px 40px -12px rgba(10,22,40,0.22)' : '0 1px 3px rgba(10,22,40,0.04)',
-          borderColor: hovered ? 'rgba(201,168,76,0.4)' : 'var(--gray-100)',
+          boxShadow: hovered ? '0 20px 40px -12px rgba(10,22,40,0.22)' : '0 2px 10px rgba(10,22,40,0.08)',
+          borderColor: hovered ? 'rgba(201,168,76,0.4)' : 'var(--gray-300)',
           transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
         }}
       >
@@ -80,6 +80,9 @@ function ProductCard({ product }: { product: Product }) {
 export default function ProductsGrid({ products }: { products: Product[] }) {
   if (!products.length) return null
 
+  // 상품 개수가 4개보다 적으면 그 수만큼만 컬럼을 만들어 카드가 폭을 꽉 채우도록 함
+  const columns = Math.min(products.length, 4)
+
   return (
     <section className="section-gap">
       <div className="container">
@@ -90,7 +93,7 @@ export default function ProductsGrid({ products }: { products: Product[] }) {
         </div>
 
         <div className="products-grid" style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px',
+          display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '20px',
         }}>
           {products.map(product => <ProductCard key={product.id} product={product} />)}
         </div>
@@ -101,7 +104,7 @@ export default function ProductsGrid({ products }: { products: Product[] }) {
       </div>
 
       <style>{`
-        @media (max-width: 900px) { .products-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 900px) { .products-grid { grid-template-columns: repeat(${Math.min(columns, 2)}, 1fr) !important; } }
         @media (max-width: 480px) { .products-grid { grid-template-columns: 1fr !important; } }
       `}</style>
     </section>
