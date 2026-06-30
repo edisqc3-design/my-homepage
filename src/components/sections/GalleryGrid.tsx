@@ -11,9 +11,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   '공공시설': '#6a3d9a',
 }
 
-function GalleryCard({ item }: { item: GalleryItem }) {
+/* ────────────────────────────────────────────
+   공통 GalleryCard (카드형 / 매거진형 공용)
+──────────────────────────────────────────── */
+function GalleryCard({ item, height = 210 }: { item: GalleryItem; height?: number }) {
   const [hovered, setHovered] = useState(false)
-
   return (
     <Link href={`/gallery/${item.id}`} style={{ display: 'block' }} className="gallery-slide-card">
       <div
@@ -28,51 +30,29 @@ function GalleryCard({ item }: { item: GalleryItem }) {
           transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
         }}
       >
-        {/* 이미지 */}
-        <div style={{ width: '100%', height: '210px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
+        <div style={{ width: '100%', height: `${height}px`, position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
           {item.image_url ? (
-            <Image
-              src={item.image_url}
-              alt={item.title}
-              fill
-              style={{
-                objectFit: 'cover',
-                transform: hovered ? 'scale(1.08)' : 'scale(1)',
-                transition: 'transform 0.6s cubic-bezier(0.4,0,0.2,1)',
-              }}
-            />
+            <Image src={item.image_url} alt={item.title} fill sizes="(max-width: 480px) 100vw, 300px"
+              style={{ objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform 0.6s cubic-bezier(0.4,0,0.2,1)' }} />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <span style={{ fontSize: '2.5rem', opacity: 0.4 }}>🪵</span>
             </div>
           )}
-
           <div style={{
             position: 'absolute', inset: 0,
-            background: hovered
-              ? 'linear-gradient(to top, rgba(10,22,40,0.75) 0%, rgba(10,22,40,0.1) 45%, transparent 70%)'
-              : 'linear-gradient(to top, rgba(10,22,40,0.3) 0%, transparent 55%)',
+            background: hovered ? 'linear-gradient(to top, rgba(10,22,40,0.75) 0%, rgba(10,22,40,0.1) 45%, transparent 70%)' : 'linear-gradient(to top, rgba(10,22,40,0.3) 0%, transparent 55%)',
             transition: 'background 0.35s',
           }} />
-
           {item.category && (
-            <span style={{
-              position: 'absolute', top: '12px', left: '12px',
-              padding: '4px 11px',
-              background: CATEGORY_COLORS[item.category] ?? '#555',
-              color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '20px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-            }}>
+            <span style={{ position: 'absolute', top: '12px', left: '12px', padding: '4px 11px', background: CATEGORY_COLORS[item.category] ?? '#555', color: 'white', fontSize: '0.7rem', fontWeight: 700, borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>
               {item.category}
             </span>
           )}
-
           <div style={{
             position: 'absolute', bottom: '12px', left: '14px', right: '14px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--white)',
-            opacity: hovered ? 1 : 0,
-            transform: hovered ? 'translateY(0)' : 'translateY(8px)',
-            transition: 'opacity 0.3s, transform 0.3s',
+            opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(8px)', transition: 'opacity 0.3s, transform 0.3s',
           }}>
             <span style={{ fontSize: '0.74rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
               자세히 보기
@@ -80,28 +60,21 @@ function GalleryCard({ item }: { item: GalleryItem }) {
             </span>
           </div>
         </div>
-
-        {/* 텍스트 */}
         <div style={{ padding: '14px 16px' }}>
-          <h4 style={{
-            fontSize: '0.9rem', fontWeight: 700, color: hovered ? '#b45309' : 'var(--navy)',
-            marginBottom: '8px', lineHeight: 1.4,
-            display: '-webkit-box', WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical', overflow: 'hidden',
-            transition: 'color 0.25s',
-          } as React.CSSProperties}>
+          <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: hovered ? '#b45309' : 'var(--navy)', marginBottom: '8px', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', transition: 'color 0.25s' } as React.CSSProperties}>
             {item.title}
           </h4>
-          <p style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>
-            {item.created_at.slice(0, 10)}
-          </p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>{item.created_at.slice(0, 10)}</p>
         </div>
       </div>
     </Link>
   )
 }
 
-export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
+/* ────────────────────────────────────────────
+   카드형 (기존 슬라이딩 그리드)
+──────────────────────────────────────────── */
+function CardMode({ items }: { items: GalleryItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
   const PAGE_SIZE = 8
@@ -110,17 +83,10 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
   const showArrows = pages.length > 1
 
   const scrollByPage = (dir: -1 | 1) => {
-    const el = scrollerRef.current
-    if (!el) return
+    const el = scrollerRef.current; if (!el) return
     const maxScroll = el.scrollWidth - el.clientWidth
-    if (dir === 1 && el.scrollLeft >= maxScroll - 4) {
-      el.scrollTo({ left: 0, behavior: 'smooth' })
-      return
-    }
-    if (dir === -1 && el.scrollLeft <= 4) {
-      el.scrollTo({ left: maxScroll, behavior: 'smooth' })
-      return
-    }
+    if (dir === 1 && el.scrollLeft >= maxScroll - 4) { el.scrollTo({ left: 0, behavior: 'smooth' }); return }
+    if (dir === -1 && el.scrollLeft <= 4) { el.scrollTo({ left: maxScroll, behavior: 'smooth' }); return }
     el.scrollBy({ left: dir * el.clientWidth, behavior: 'smooth' })
   }
 
@@ -130,6 +96,144 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
     return () => clearInterval(id)
   }, [showArrows, paused])
 
+  return (
+    <div style={{ position: 'relative', padding: '0 52px' }} className="gallery-slide-wrapper"
+      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {showArrows && (
+        <button type="button" onClick={() => scrollByPage(-1)} aria-label="이전" className="gallery-slide-arrow" style={arrowStyle('left')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
+      )}
+      <div ref={scrollerRef} style={{ display: 'flex', overflowX: showArrows ? 'auto' : 'hidden', scrollSnapType: showArrows ? 'x mandatory' : undefined, scrollbarWidth: 'none' }} className="gallery-scroller">
+        {pages.map((page, pi) => (
+          <div key={pi} className="gallery-page" style={{ flex: '0 0 100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', scrollSnapAlign: 'start' }}>
+            {page.map(item => <GalleryCard key={item.id} item={item} />)}
+          </div>
+        ))}
+      </div>
+      {showArrows && (
+        <button type="button" onClick={() => scrollByPage(1)} aria-label="다음" className="gallery-slide-arrow" style={arrowStyle('right')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+        </button>
+      )}
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────
+   웹진형 (큰 피처드 1개 + 우측 리스트 4개)
+──────────────────────────────────────────── */
+function WebzineMode({ items }: { items: GalleryItem[] }) {
+  const [featured, ...rest] = items
+  const sideItems = rest.slice(0, 4)
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }} className="webzine-grid">
+      {/* 피처드 대형 카드 */}
+      <Link href={`/gallery/${featured.id}`} style={{ display: 'block' }} className="webzine-featured">
+        <div style={{ borderRadius: '18px', overflow: 'hidden', position: 'relative', height: '460px', boxShadow: '0 24px 48px -12px rgba(10,22,40,0.22)', cursor: 'pointer' }}>
+          {featured.image_url ? (
+            <Image src={featured.image_url} alt={featured.title} fill sizes="(max-width: 900px) 100vw, 60vw" style={{ objectFit: 'cover' }} />
+          ) : (
+            <div style={{ background: 'var(--navy)', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '4rem', opacity: 0.3 }}>🪵</span>
+            </div>
+          )}
+          {/* 오버레이 */}
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,22,40,0.88) 0%, rgba(10,22,40,0.2) 50%, transparent 100%)' }} />
+          {featured.category && (
+            <span style={{ position: 'absolute', top: '20px', left: '20px', padding: '5px 14px', background: CATEGORY_COLORS[featured.category] ?? '#555', color: '#fff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '20px' }}>
+              {featured.category}
+            </span>
+          )}
+          <div style={{ position: 'absolute', bottom: '28px', left: '28px', right: '28px' }}>
+            <div style={{ display: 'inline-block', background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.68rem', fontWeight: 800, padding: '3px 10px', borderRadius: '6px', marginBottom: '10px', letterSpacing: '0.05em' }}>
+              FEATURED
+            </div>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff', lineHeight: 1.35, marginBottom: '8px' }}>{featured.title}</h3>
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>{featured.created_at.slice(0, 10)}</p>
+          </div>
+        </div>
+      </Link>
+
+      {/* 우측 리스트 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {sideItems.map(item => (
+          <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block' }}>
+            <div style={{ display: 'flex', gap: '14px', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--gray-100)', background: '#fff', transition: 'box-shadow 0.2s', padding: '0', cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(10,22,40,0.12)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>
+              <div style={{ width: '100px', minWidth: '100px', height: '90px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
+                {item.image_url ? (
+                  <Image src={item.image_url} alt={item.title} fill sizes="100px" style={{ objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '1.5rem', opacity: 0.3 }}>🪵</div>
+                )}
+              </div>
+              <div style={{ padding: '14px 12px 14px 0', flex: 1, minWidth: 0 }}>
+                {item.category && (
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: CATEGORY_COLORS[item.category] ?? '#555', marginBottom: '4px', display: 'block' }}>{item.category}</span>
+                )}
+                <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.35, marginBottom: '6px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+                  {item.title}
+                </p>
+                <p style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>{item.created_at.slice(0, 10)}</p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────
+   매거진형 (가로 스크롤 대형 카드)
+──────────────────────────────────────────── */
+function MagazineMode({ items }: { items: GalleryItem[] }) {
+  const visible = items.slice(0, 8)
+  return (
+    <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '8px' }} className="magazine-scroller">
+      {visible.map(item => (
+        <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block', flex: '0 0 280px' }}>
+          <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--gray-100)', background: '#fff', cursor: 'pointer', transition: 'transform 0.25s, box-shadow 0.25s' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(10,22,40,0.16)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
+            <div style={{ width: '100%', height: '200px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
+              {item.image_url ? (
+                <Image src={item.image_url} alt={item.title} fill sizes="280px" style={{ objectFit: 'cover' }} />
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '2rem', opacity: 0.3 }}>🪵</div>
+              )}
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,22,40,0.5) 0%, transparent 60%)' }} />
+              {item.category && (
+                <span style={{ position: 'absolute', top: '12px', left: '12px', padding: '4px 11px', background: CATEGORY_COLORS[item.category] ?? '#555', color: '#fff', fontSize: '0.68rem', fontWeight: 700, borderRadius: '20px' }}>
+                  {item.category}
+                </span>
+              )}
+            </div>
+            <div style={{ padding: '16px' }}>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.4, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+                {item.title}
+              </h4>
+              {item.description && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--gray-500)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+                  {item.description}
+                </p>
+              )}
+              <p style={{ fontSize: '0.7rem', color: '#c9a84c', marginTop: '10px', fontWeight: 600 }}>{item.created_at.slice(0, 10)}</p>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────
+   메인 GalleryGrid export
+──────────────────────────────────────────── */
+export default function GalleryGrid({ items, displayMode = 'card' }: { items: GalleryItem[]; displayMode?: string }) {
   if (!items.length) return null
 
   return (
@@ -141,53 +245,11 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
           <p>전국 다양한 현장의 시공 실적을 확인하세요</p>
         </div>
 
-        <div
-          style={{ position: 'relative', padding: '0 52px' }}
-          className="gallery-slide-wrapper"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}>
-          {showArrows && (
-            <button
-              type="button"
-              onClick={() => scrollByPage(-1)}
-              aria-label="이전 시공사례"
-              className="gallery-slide-arrow gallery-slide-arrow-left"
-              style={arrowStyle('left')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-            </button>
-          )}
-
-          <div
-            ref={scrollerRef}
-            style={{
-              display: 'flex',
-              overflowX: showArrows ? 'auto' : 'hidden',
-              scrollSnapType: showArrows ? 'x mandatory' : undefined,
-              scrollbarWidth: 'none',
-            }}
-            className="gallery-scroller">
-            {pages.map((page, pi) => (
-              <div key={pi} className="gallery-page" style={{
-                flex: '0 0 100%', display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px',
-                scrollSnapAlign: 'start',
-              }}>
-                {page.map(item => <GalleryCard key={item.id} item={item} />)}
-              </div>
-            ))}
-          </div>
-
-          {showArrows && (
-            <button
-              type="button"
-              onClick={() => scrollByPage(1)}
-              aria-label="다음 시공사례"
-              className="gallery-slide-arrow gallery-slide-arrow-right"
-              style={arrowStyle('right')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-            </button>
-          )}
-        </div>
+        {displayMode === 'webzine' && <WebzineMode items={items} />}
+        {displayMode === 'magazine' && <MagazineMode items={items} />}
+        {displayMode === 'card' && <CardMode items={items} />}
+        {/* 알 수 없는 mode는 card로 fallback */}
+        {!['webzine', 'magazine', 'card'].includes(displayMode) && <CardMode items={items} />}
 
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <Link href="/gallery" className="btn-outline-gold">시공사례 전체보기</Link>
@@ -196,11 +258,14 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
 
       <style>{`
         .gallery-scroller::-webkit-scrollbar { display: none; }
+        .magazine-scroller::-webkit-scrollbar { display: none; }
         @media (max-width: 900px) {
           .gallery-slide-arrow { display: none !important; }
           .gallery-slide-wrapper { padding: 0 !important; }
           .gallery-scroller { overflow-x: auto !important; }
           .gallery-page { grid-template-columns: repeat(2, 1fr) !important; }
+          .webzine-grid { grid-template-columns: 1fr !important; }
+          .webzine-featured { order: -1; }
         }
         @media (max-width: 480px) {
           .gallery-page { grid-template-columns: 1fr !important; }
