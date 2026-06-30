@@ -29,7 +29,7 @@ function GalleryCard({ item }: { item: GalleryItem }) {
         }}
       >
         {/* 이미지 */}
-        <div style={{ width: '100%', height: '160px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
+        <div style={{ width: '100%', height: '210px', position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, var(--navy-light) 0%, var(--navy) 100%)' }}>
           {item.image_url ? (
             <Image
               src={item.image_url}
@@ -104,7 +104,10 @@ function GalleryCard({ item }: { item: GalleryItem }) {
 export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
-  const showArrows = items.length > 8
+  const PAGE_SIZE = 8
+  const pages: GalleryItem[][] = []
+  for (let i = 0; i < items.length; i += PAGE_SIZE) pages.push(items.slice(i, i + PAGE_SIZE))
+  const showArrows = pages.length > 1
 
   const scrollByPage = (dir: -1 | 1) => {
     const el = scrollerRef.current
@@ -123,7 +126,7 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
 
   useEffect(() => {
     if (!showArrows || paused) return
-    const id = setInterval(() => scrollByPage(1), 4000)
+    const id = setInterval(() => scrollByPage(1), 4500)
     return () => clearInterval(id)
   }, [showArrows, paused])
 
@@ -156,13 +159,21 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
           <div
             ref={scrollerRef}
             style={{
-              display: 'flex', gap: '20px',
+              display: 'flex',
               overflowX: showArrows ? 'auto' : 'hidden',
               scrollSnapType: showArrows ? 'x mandatory' : undefined,
-              paddingBottom: '8px', scrollbarWidth: 'none',
+              scrollbarWidth: 'none',
             }}
             className="gallery-scroller">
-            {items.map(item => <GalleryCard key={item.id} item={item} />)}
+            {pages.map((page, pi) => (
+              <div key={pi} className="gallery-page" style={{
+                flex: '0 0 100%', display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px',
+                scrollSnapAlign: 'start',
+              }}>
+                {page.map(item => <GalleryCard key={item.id} item={item} />)}
+              </div>
+            ))}
           </div>
 
           {showArrows && (
@@ -184,17 +195,13 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
 
       <style>{`
         .gallery-scroller::-webkit-scrollbar { display: none; }
-        .gallery-slide-card {
-          scroll-snap-align: start;
-          flex: 0 0 calc((100% - 140px) / 8);
-        }
         @media (max-width: 900px) {
           .gallery-slide-arrow { display: none !important; }
           .gallery-scroller { overflow-x: auto !important; }
-          .gallery-slide-card { flex: 0 0 calc((100% - 20px) / 2) !important; }
+          .gallery-page { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 480px) {
-          .gallery-slide-card { flex: 0 0 86% !important; }
+          .gallery-page { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </section>
