@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
+import { toggleBusinessCard } from '@/lib/actions'
 import { AdminSection, AdminCard, Btn, Input, Textarea, Toggle, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { BusinessCard } from '@/types'
 
@@ -73,8 +74,9 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
           <AdminCard key={card.id} style={{ position: 'relative' }}>
             <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '4px' }}>
               <Toggle value={card.is_active} onChange={async () => {
-                await sb.from('business_cards').update({ is_active: !card.is_active }).eq('id', card.id)
-                setCards(p => p.map(c => c.id === card.id ? { ...c, is_active: !c.is_active } : c))
+                const newValue = !card.is_active
+                await toggleBusinessCard(card.id, newValue)
+                setCards(p => p.map(c => c.id === card.id ? { ...c, is_active: newValue } : c))
               }} />
             </div>
             <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{card.icon}</div>
