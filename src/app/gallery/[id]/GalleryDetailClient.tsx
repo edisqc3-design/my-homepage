@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import PageBanner from '@/components/ui/PageBanner'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -13,6 +13,16 @@ const CATEGORY_COLORS: Record<string, string> = {
 function ImageSlider({ images, title }: { images: string[]; title: string }) {
   const [active, setActive] = useState(0)
   const [lightbox, setLightbox] = useState(false)
+  const [paused, setPaused] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    if (images.length <= 1 || paused || lightbox) return
+    timerRef.current = setInterval(() => {
+      setActive(i => (i + 1) % images.length)
+    }, 4000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [images.length, paused, lightbox])
 
   if (!images.length) {
     return (
@@ -31,6 +41,8 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
         {/* 메인 이미지 */}
         <div
           onClick={() => setLightbox(true)}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
           style={{
             width: '100%', aspectRatio: '4/3', position: 'relative',
             borderRadius: '16px', overflow: 'hidden', cursor: 'zoom-in',
@@ -53,6 +65,18 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
               }}>
                 {active + 1} / {images.length}
               </span>
+              <div style={{
+                position: 'absolute', bottom: '12px', left: '12px',
+                display: 'flex', gap: '4px',
+              }}>
+                {images.map((_, i) => (
+                  <span key={i} style={{
+                    width: '6px', height: '6px', borderRadius: '50%',
+                    background: i === active ? '#c9a84c' : 'rgba(255,255,255,0.5)',
+                    transition: 'background 0.2s',
+                  }} />
+                ))}
+              </div>
             </>
           )}
 
