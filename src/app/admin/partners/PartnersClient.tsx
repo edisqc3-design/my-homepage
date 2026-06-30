@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
+import { revalidateHome } from '@/lib/actions'
 import { AdminSection, AdminCard, Btn, Input, Toggle, ImageUploader, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { Partner } from '@/types'
 
@@ -24,11 +25,11 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
     if (isNew) {
       const { data, error } = await sb.from('partners').insert([{ ...editing, sort_order: partners.length + 1 }]).select().single()
       if (error) showToast('저장 실패', 'error')
-      else { setPartners(p => [...p, data]); showToast('파트너 추가 완료') }
+      else { setPartners(p => [...p, data]); showToast('파트너 추가 완료'); revalidateHome() }
     } else {
       const { error } = await sb.from('partners').update(editing).eq('id', editing.id!)
       if (error) showToast('저장 실패', 'error')
-      else { setPartners(p => p.map(x => x.id === editing.id ? { ...x, ...editing } as Partner : x)); showToast('파트너 수정 완료') }
+      else { setPartners(p => p.map(x => x.id === editing.id ? { ...x, ...editing } as Partner : x)); showToast('파트너 수정 완료'); revalidateHome() }
     }
     setSaving(false); setEditing(null); setIsNew(false)
   }
@@ -37,7 +38,7 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
     if (!deleteTarget) return
     await sb.from('partners').delete().eq('id', deleteTarget)
     setPartners(p => p.filter(x => x.id !== deleteTarget))
-    showToast('삭제 완료'); setDeleteTarget(null)
+    showToast('삭제 완료'); setDeleteTarget(null); revalidateHome()
   }
 
   const handleOrder = async (id: string, dir: 'up' | 'down') => {
@@ -51,6 +52,7 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
       sb.from('partners').update({ sort_order: idx + 1 }).eq('id', next[idx].id),
       sb.from('partners').update({ sort_order: si + 1 }).eq('id', next[si].id),
     ])
+    revalidateHome()
   }
 
   return (
@@ -76,8 +78,15 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
               <Btn variant="ghost" size="sm" onClick={() => handleOrder(p.id, 'up')} disabled={i === 0}>↑</Btn>
               <Btn variant="ghost" size="sm" onClick={() => handleOrder(p.id, 'down')} disabled={i === partners.length - 1}>↓</Btn>
               <Toggle value={p.is_active} onChange={async () => {
-                await sb.from('partners').update({ is_active: !p.is_active }).eq('id', p.id)
-                setPartners(prev => prev.map(x => x.id === p.id ? { ...x, is_active: !x.is_active } : x))
+                const newValue = !p.is_active
+                setPartners(prev => prev.map(x => x.id === p.id ? { ...x, is_active: newValue } : x))
+                const { error } = await sb.from('partners').update({ is_active: newValue }).eq('id', p.id)
+                if (error) {
+                  setPartners(prev => prev.map(x => x.id === p.id ? { ...x, is_active: !newValue } : x))
+                  showToast('변경 실패', 'error')
+                } else {
+                  revalidateHome()
+                }
               }} />
               <Btn variant="secondary" size="sm" onClick={() => { setEditing({ ...p }); setIsNew(false) }}>수정</Btn>
               <Btn variant="danger" size="sm" onClick={() => setDeleteTarget(p.id)}>삭제</Btn>
