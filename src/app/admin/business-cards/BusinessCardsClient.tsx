@@ -17,6 +17,8 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const [saving, setSaving] = useState(false)
+  const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set())
+  const [savingAll, setSavingAll] = useState(false)
 
   const sb = createClient()
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -61,29 +63,55 @@ export default function BusinessCardsClient({ initialCards }: { initialCards: Bu
     revalidateHome()
   }
 
+  const handleSaveAll = async () => {
+    if (dirtyIds.size === 0) return
+    setSavingAll(true)
+    const ids = Array.from(dirtyIds)
+    const results = await Promise.all(ids.map(id => {
+      const card = cards.find(c => c.id === id)!
+      return sb.from('business_cards').update({ is_active: card.is_active }).eq('id', id)
+    }))
+    const hasError = results.some(r => r.error)
+    if (hasError) {
+      showToast('일부 항목 저장에 실패했습니다.', 'error')
+    } else {
+      showToast('변경사항이 저장되었습니다.')
+      setDirtyIds(new Set())
+      revalidateHome()
+    }
+    setSavingAll(false)
+  }
+
   return (
     <div>
       <AdminSection
         title="비즈니스 카드 관리"
         desc="홈페이지 사업안내 섹션의 카드를 관리합니다."
-        action={<Btn onClick={() => { setEditing({ ...EMPTY }); setIsNew(true) }}>+ 카드 추가</Btn>}
+        action={
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {dirtyIds.size > 0 && (
+              <Btn onClick={handleSaveAll} disabled={savingAll}>
+                {savingAll ? '저장 중...' : `변경사항 저장 (${dirtyIds.size})`}
+              </Btn>
+            )}
+            <Btn variant={dirtyIds.size > 0 ? 'secondary' : 'primary'} onClick={() => { setEditing({ ...EMPTY }); setIsNew(true) }}>+ 카드 추가</Btn>
+          </div>
+        }
       />
 
       {/* 그리드 목록 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {cards.map((card, i) => (
-          <AdminCard key={card.id} style={{ position: 'relative' }}>
+          <AdminCard key={card.id} style={{
+            position: 'relative',
+            outline: dirtyIds.has(card.id) ? '2px solid #c9a84c' : 'none',
+            outlineOffset: '2px',
+          }}>
             <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '4px' }}>
-              <Toggle value={card.is_active} onChange={async () => {
+              <Toggle value={card.is_active} onChange={() => {
                 const newValue = !card.is_active
                 setCards(p => p.map(c => c.id === card.id ? { ...c, is_active: newValue } : c))
-                const { error } = await sb.from('business_cards').update({ is_active: newValue }).eq('id', card.id)
-                if (error) {
-                  setCards(p => p.map(c => c.id === card.id ? { ...c, is_active: !newValue } : c))
-                  showToast('변경 실패', 'error')
-                } else {
-                  revalidateHome()
-                }
+                setDirtyIds(prev => new Set(prev).add(card.id))
               }} />
             </div>
             <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{card.icon}</div>
