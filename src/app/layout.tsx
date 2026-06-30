@@ -58,7 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <TopBar initialUser={user} initialIsAdmin={isAdmin} />
-        <Header />
+        <Header user={user} isAdmin={isAdmin} />
         <main style={{ flex: 1 }}>{children}</main>
         <Footer settings={settings} />
         <ScrollToTop />
