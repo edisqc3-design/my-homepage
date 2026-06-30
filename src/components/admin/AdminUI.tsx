@@ -284,6 +284,132 @@ export function ImageUploader({
   )
 }
 
+/* ─── 다중 이미지 업로더 (여러 장 업로드 + 순서변경 + 삭제) ─── */
+export function MultiImageUploader({
+  value, onChange, bucket = 'images', folder = 'uploads', max = 10,
+}: {
+  value: string[]; onChange: (urls: string[]) => void
+  bucket?: string; folder?: string; max?: number
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+
+    if (value.length + files.length > max) {
+      setError(`이미지는 최대 ${max}장까지 업로드할 수 있습니다.`)
+      return
+    }
+
+    setUploading(true)
+    setError('')
+    const sb = createClient()
+    const uploaded: string[] = []
+
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`"${file.name}"의 크기가 5MB를 초과해 건너뛰었습니다.`)
+        continue
+      }
+      const ext = file.name.split('.').pop()
+      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`
+      const { error: uploadError } = await sb.storage.from(bucket).upload(fileName, file, { upsert: true })
+      if (uploadError) { setError('일부 이미지 업로드에 실패했습니다.'); continue }
+      const { data } = sb.storage.from(bucket).getPublicUrl(fileName)
+      uploaded.push(data.publicUrl)
+    }
+
+    onChange([...value, ...uploaded])
+    setUploading(false)
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  const removeAt = (idx: number) => onChange(value.filter((_, i) => i !== idx))
+  const moveAt = (idx: number, dir: -1 | 1) => {
+    const next = [...value]
+    const target = idx + dir
+    if (target < 0 || target >= next.length) return
+    ;[next[idx], next[target]] = [next[target], next[idx]]
+    onChange(next)
+  }
+
+  return (
+    <div>
+      {value.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+          {value.map((url, i) => (
+            <div key={url + i} style={{ position: 'relative', width: '110px' }}>
+              <img src={url} alt={`이미지 ${i + 1}`} style={{
+                width: '110px', height: '80px', objectFit: 'cover',
+                borderRadius: '8px', border: i === 0 ? '2px solid #c9a84c' : '1px solid #e5e7eb',
+              }} />
+              {i === 0 && (
+                <span style={{
+                  position: 'absolute', bottom: '4px', left: '4px',
+                  padding: '1px 6px', background: 'rgba(201,168,76,0.9)', color: '#1a1a1a',
+                  fontSize: '0.62rem', fontWeight: 700, borderRadius: '6px',
+                }}>대표</span>
+              )}
+              <button type="button" onClick={() => removeAt(i)} style={{
+                position: 'absolute', top: '-7px', right: '-7px',
+                width: '20px', height: '20px', borderRadius: '50%',
+                background: '#e63946', color: '#fff', border: 'none',
+                cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>✕</button>
+              <div style={{ position: 'absolute', bottom: '4px', right: '4px', display: 'flex', gap: '2px' }}>
+                {i > 0 && (
+                  <button type="button" onClick={() => moveAt(i, -1)} style={{
+                    width: '18px', height: '18px', borderRadius: '4px', border: 'none',
+                    background: 'rgba(10,22,40,0.7)', color: '#fff', fontSize: '0.6rem', cursor: 'pointer',
+                  }}>◀</button>
+                )}
+                {i < value.length - 1 && (
+                  <button type="button" onClick={() => moveAt(i, 1)} style={{
+                    width: '18px', height: '18px', borderRadius: '4px', border: 'none',
+                    background: 'rgba(10,22,40,0.7)', color: '#fff', fontSize: '0.6rem', cursor: 'pointer',
+                  }}>▶</button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div
+        onClick={() => inputRef.current?.click()}
+        style={{
+          border: '2px dashed #d1d5db', borderRadius: '10px',
+          padding: '20px', textAlign: 'center', cursor: 'pointer',
+          background: '#fafafa', transition: 'all 0.15s',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = '#c9a84c'
+          e.currentTarget.style.background = '#fffbf0'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = '#d1d5db'
+          e.currentTarget.style.background = '#fafafa'
+        }}>
+        <div style={{ fontSize: '1.5rem', marginBottom: '6px' }}>
+          {uploading ? '⏳' : '📷'}
+        </div>
+        <p style={{ fontSize: '0.82rem', color: '#6b7280' }}>
+          {uploading ? '업로드 중...' : '클릭하여 이미지 업로드 (여러 장 선택 가능)'}
+        </p>
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: '2px' }}>
+          PNG, JPG, WEBP / 장당 최대 5MB / 최대 {max}장 · 첫 번째 사진이 대표 이미지로 사용됩니다
+        </p>
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" multiple onChange={handleUpload} style={{ display: 'none' }} />
+      {error && <p style={{ color: '#e63946', fontSize: '0.78rem', marginTop: '6px' }}>{error}</p>}
+    </div>
+  )
+}
+
 /* ─── 카드 래퍼 ─── */
 export function AdminCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
