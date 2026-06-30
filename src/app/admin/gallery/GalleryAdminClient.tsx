@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { AdminSection, AdminCard, Btn, Input, Textarea, Select, Toggle, MultiImageUploader, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { GalleryItem } from '@/types'
@@ -9,6 +9,12 @@ const CATEGORIES = [
   { value: '상업시설', label: '상업시설' },
   { value: '주거시설', label: '주거시설' },
   { value: '공공시설', label: '공공시설' },
+]
+
+const DISPLAY_MODES = [
+  { value: 'card',     label: '카드형',    desc: '그리드 카드 + 자동 슬라이드',  icon: '⊞' },
+  { value: 'webzine',  label: '웹진형',    desc: '큰 피처드 + 우측 미니 리스트', icon: '▤' },
+  { value: 'magazine', label: '매거진형',  desc: '가로 스크롤 대형 카드',        icon: '▭' },
 ]
 
 const EMPTY: Partial<GalleryItem> = { title: '', category: '상업시설', image_url: '', image_urls: [], description: '', project_date: '', is_active: true }
@@ -21,9 +27,32 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const sb = createClient()
+  // 표시 방식
+  const [displayMode, setDisplayMode] = useState<string>('card')
+  const [modeSaving, setModeSaving] = useState(false)
+
+  const sb = useMemo(() => createClient(), [])
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type }); setTimeout(() => setToast(null), 3000)
+  }
+
+  // 저장된 표시방식 불러오기
+  useEffect(() => {
+    sb.from('site_settings').select('value').eq('key', 'gallery_display_mode').single()
+      .then(({ data }) => { if (data?.value) setDisplayMode(data.value) })
+  }, [sb])
+
+  const saveDisplayMode = async (mode: string) => {
+    setModeSaving(true)
+    setDisplayMode(mode)
+    const { data: existing } = await sb.from('site_settings').select('key').eq('key', 'gallery_display_mode').single()
+    if (existing) {
+      await sb.from('site_settings').update({ value: mode }).eq('key', 'gallery_display_mode')
+    } else {
+      await sb.from('site_settings').insert({ key: 'gallery_display_mode', value: mode })
+    }
+    setModeSaving(false)
+    showToast(`표시방식이 "${DISPLAY_MODES.find(m => m.value === mode)?.label}"으로 변경되었습니다.`)
   }
 
   const handleSave = async () => {
@@ -51,6 +80,38 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
 
   return (
     <div>
+      {/* ── 표시방식 선택 ── */}
+      <div style={{ marginBottom: '32px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '24px' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0a1628', marginBottom: '4px' }}>메인화면 표시방식</h3>
+          <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>선택한 방식이 메인화면 시공사례 섹션에 즉시 적용됩니다.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          {DISPLAY_MODES.map(m => (
+            <button
+              key={m.value}
+              onClick={() => saveDisplayMode(m.value)}
+              disabled={modeSaving}
+              style={{
+                flex: '1', minWidth: '140px', padding: '14px 16px',
+                border: displayMode === m.value ? '2px solid #c9a84c' : '2px solid #e5e7eb',
+                borderRadius: '12px', background: displayMode === m.value ? '#fffbf0' : '#f9fafb',
+                cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>{m.icon}</div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: displayMode === m.value ? '#b45309' : '#374151', marginBottom: '3px' }}>{m.label}</div>
+              <div style={{ fontSize: '0.73rem', color: '#9ca3af' }}>{m.desc}</div>
+              {displayMode === m.value && (
+                <div style={{ marginTop: '8px', fontSize: '0.7rem', fontWeight: 700, color: '#c9a84c', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  ✓ 현재 적용 중
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <AdminSection
         title="시공사례 관리"
         desc={`총 ${items.length}개의 시공사례가 등록되어 있습니다.`}
