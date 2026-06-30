@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { logout } from '@/lib/auth-actions'
 
 const NAV_ITEMS = [
   {
@@ -58,9 +60,9 @@ const NAV_ITEMS = [
 
 import type { User } from '@supabase/supabase-js'
 
-// ... (기존 NAV_ITEMS 유지)
-
 export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?: boolean }) {
+  const pathname = usePathname()
+  const isAdminPage = pathname?.startsWith('/admin')
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -168,6 +170,54 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
           <Link href="/inquiry" className="btn-primary" style={{ fontSize: '0.82rem', padding: '9px 20px' }}>
             견적 문의
           </Link>
+
+          {user && isAdmin && isAdminPage && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="hidden-mobile">
+              <Link href="/admin" style={{
+                padding: '3px 10px',
+                background: 'rgba(201,168,76,0.15)',
+                color: '#c9a84c',
+                fontSize: '0.72rem', fontWeight: 700, borderRadius: '10px',
+                textDecoration: 'none',
+              }}>
+                👑 최고관리자
+              </Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '30px', height: '30px', borderRadius: '50%',
+                  background: 'var(--gold)', color: 'var(--navy)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 900, fontSize: '0.85rem',
+                }}>
+                  {(user.user_metadata?.name ?? user.email ?? 'A')[0].toUpperCase()}
+                </div>
+                <div>
+                  <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--white)', lineHeight: 1.2 }}>
+                    {user.user_metadata?.name ?? 'admin'}
+                  </p>
+                  <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)' }}>{user.email}</p>
+                </div>
+              </div>
+              <button onClick={() => logout()} style={{
+                padding: '5px 12px', borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.2)', background: 'transparent',
+                color: 'rgba(255,255,255,0.6)', fontSize: '0.78rem', cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(230,57,70,0.15)'
+                  e.currentTarget.style.color = '#e63946'
+                  e.currentTarget.style.borderColor = 'rgba(230,57,70,0.4)'
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'
+                }}>
+                로그아웃
+              </button>
+            </div>
+          )}
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
