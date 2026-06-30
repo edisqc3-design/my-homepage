@@ -172,7 +172,7 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
           </Link>
 
           {user && isAdmin && isAdminPage && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="hidden-mobile">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '16px' }} className="hidden-mobile">
               <Link href="/admin" style={{
                 padding: '3px 10px',
                 background: 'rgba(201,168,76,0.15)',
