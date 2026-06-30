@@ -93,7 +93,7 @@ function GalleryCard({ item }: { item: GalleryItem }) {
             {item.title}
           </h4>
           <p style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>
-            {item.project_date ?? item.created_at.slice(0, 10)}
+            {item.created_at.slice(0, 10)}
           </p>
         </div>
       </div>
