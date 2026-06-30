@@ -28,7 +28,8 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
   const [saving, setSaving] = useState(false)
 
   // 표시 방식
-  const [displayMode, setDisplayMode] = useState<string>('card')
+  const [displayMode, setDisplayMode] = useState<string>('card')   // 현재 저장된 값
+  const [pendingMode, setPendingMode] = useState<string>('card')   // 선택 중인 값
   const [modeSaving, setModeSaving] = useState(false)
 
   const sb = useMemo(() => createClient(), [])
@@ -39,20 +40,24 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
   // 저장된 표시방식 불러오기
   useEffect(() => {
     sb.from('site_settings').select('value').eq('key', 'gallery_display_mode').single()
-      .then(({ data }) => { if (data?.value) setDisplayMode(data.value) })
+      .then(({ data }) => {
+        if (data?.value) { setDisplayMode(data.value); setPendingMode(data.value) }
+      })
   }, [sb])
 
-  const saveDisplayMode = async (mode: string) => {
+  const saveDisplayMode = async () => {
     setModeSaving(true)
-    setDisplayMode(mode)
     const { data: existing } = await sb.from('site_settings').select('key').eq('key', 'gallery_display_mode').single()
     if (existing) {
-      await sb.from('site_settings').update({ value: mode }).eq('key', 'gallery_display_mode')
+      await sb.from('site_settings').update({ value: pendingMode }).eq('key', 'gallery_display_mode')
     } else {
-      await sb.from('site_settings').insert({ key: 'gallery_display_mode', value: mode })
+      await sb.from('site_settings').insert({ key: 'gallery_display_mode', value: pendingMode })
     }
+    // 메인페이지 ISR 캐시 즉시 갱신
+    await fetch('/api/revalidate', { method: 'POST' })
+    setDisplayMode(pendingMode)
     setModeSaving(false)
-    showToast(`표시방식이 "${DISPLAY_MODES.find(m => m.value === mode)?.label}"으로 변경되었습니다.`)
+    showToast(`"${DISPLAY_MODES.find(m => m.value === pendingMode)?.label}" 방식으로 저장되었습니다. 메인화면에 즉시 반영됩니다.`)
   }
 
   const handleSave = async () => {
@@ -84,31 +89,40 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
       <div style={{ marginBottom: '32px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '24px' }}>
         <div style={{ marginBottom: '16px' }}>
           <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0a1628', marginBottom: '4px' }}>메인화면 표시방식</h3>
-          <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>선택한 방식이 메인화면 시공사례 섹션에 즉시 적용됩니다.</p>
+          <p style={{ fontSize: '0.8rem', color: '#6b7280' }}>방식 선택 후 저장 버튼을 누르면 메인화면에 즉시 반영됩니다.</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
           {DISPLAY_MODES.map(m => (
             <button
               key={m.value}
-              onClick={() => saveDisplayMode(m.value)}
-              disabled={modeSaving}
+              onClick={() => setPendingMode(m.value)}
               style={{
                 flex: '1', minWidth: '140px', padding: '14px 16px',
-                border: displayMode === m.value ? '2px solid #c9a84c' : '2px solid #e5e7eb',
-                borderRadius: '12px', background: displayMode === m.value ? '#fffbf0' : '#f9fafb',
+                border: pendingMode === m.value ? '2px solid #c9a84c' : '2px solid #e5e7eb',
+                borderRadius: '12px', background: pendingMode === m.value ? '#fffbf0' : '#f9fafb',
                 cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
               }}
             >
               <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>{m.icon}</div>
-              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: displayMode === m.value ? '#b45309' : '#374151', marginBottom: '3px' }}>{m.label}</div>
+              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: pendingMode === m.value ? '#b45309' : '#374151', marginBottom: '3px' }}>{m.label}</div>
               <div style={{ fontSize: '0.73rem', color: '#9ca3af' }}>{m.desc}</div>
               {displayMode === m.value && (
-                <div style={{ marginTop: '8px', fontSize: '0.7rem', fontWeight: 700, color: '#c9a84c', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ marginTop: '8px', fontSize: '0.7rem', fontWeight: 700, color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   ✓ 현재 적용 중
                 </div>
               )}
             </button>
           ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Btn onClick={saveDisplayMode} disabled={modeSaving || pendingMode === displayMode}>
+            {modeSaving ? '저장 중...' : '저장하고 메인화면에 반영'}
+          </Btn>
+          {pendingMode !== displayMode && (
+            <span style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 600 }}>
+              ⚠ 아직 저장되지 않았습니다
+            </span>
+          )}
         </div>
       </div>
 
