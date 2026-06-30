@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { GalleryItem } from '@/types'
@@ -15,7 +15,7 @@ function GalleryCard({ item }: { item: GalleryItem }) {
   const [hovered, setHovered] = useState(false)
 
   return (
-    <Link href={`/gallery/${item.id}`} style={{ display: 'block' }}>
+    <Link href={`/gallery/${item.id}`} style={{ display: 'block', flex: '0 0 auto', width: '270px' }} className="gallery-slide-card">
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -102,7 +102,15 @@ function GalleryCard({ item }: { item: GalleryItem }) {
 }
 
 export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
+  const scrollerRef = useRef<HTMLDivElement>(null)
   if (!items.length) return null
+
+  const scrollByCards = (dir: -1 | 1) => {
+    const el = scrollerRef.current
+    if (!el) return
+    const cardWidth = 270 + 20 // card width + gap
+    el.scrollBy({ left: dir * cardWidth * 2, behavior: 'smooth' })
+  }
 
   return (
     <section className="section-gap">
@@ -113,8 +121,34 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
           <p>전국 다양한 현장의 시공 실적을 확인하세요</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }} className="gallery-grid">
-          {items.map(item => <GalleryCard key={item.id} item={item} />)}
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={() => scrollByCards(-1)}
+            aria-label="이전 시공사례"
+            className="gallery-slide-arrow gallery-slide-arrow-left"
+            style={arrowStyle('left')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+
+          <div
+            ref={scrollerRef}
+            style={{
+              display: 'flex', gap: '20px', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              paddingBottom: '8px', scrollbarWidth: 'none',
+            }}
+            className="gallery-scroller">
+            {items.map(item => <GalleryCard key={item.id} item={item} />)}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => scrollByCards(1)}
+            aria-label="다음 시공사례"
+            className="gallery-slide-arrow gallery-slide-arrow-right"
+            style={arrowStyle('right')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+          </button>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
@@ -123,9 +157,22 @@ export default function GalleryGrid({ items }: { items: GalleryItem[] }) {
       </div>
 
       <style>{`
-        @media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-        @media (max-width: 480px) { .gallery-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; } }
+        .gallery-scroller::-webkit-scrollbar { display: none; }
+        .gallery-slide-card { scroll-snap-align: start; }
+        @media (max-width: 640px) {
+          .gallery-slide-arrow { display: none !important; }
+        }
       `}</style>
     </section>
   )
+}
+
+function arrowStyle(side: 'left' | 'right'): React.CSSProperties {
+  return {
+    position: 'absolute', top: '40%', [side]: '-18px', transform: 'translateY(-50%)',
+    width: '42px', height: '42px', borderRadius: '50%',
+    background: 'var(--white)', color: 'var(--navy)', border: '1px solid var(--gray-200)',
+    boxShadow: '0 8px 20px rgba(10,22,40,0.12)', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2,
+  }
 }
