@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { logout } from '@/lib/auth-actions'
 
 const PAGE_TITLES: Record<string, string> = {
@@ -39,12 +40,12 @@ export default function AdminHeader({ user }: Props) {
       </h1>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{
+        <Link href="/admin" style={{
           padding: '3px 10px', background: 'rgba(201,168,76,0.15)', color: '#b45309',
-          fontSize: '0.72rem', fontWeight: 700, borderRadius: '10px',
+          fontSize: '0.72rem', fontWeight: 700, borderRadius: '10px', textDecoration: 'none',
         }}>
-          👑 {user.role === 'super_admin' ? '최고관리자' : '관리자'}
-        </span>
+          👑 최고관리자
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
             width: '30px', height: '30px', borderRadius: '50%',
