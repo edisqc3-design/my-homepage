@@ -13,6 +13,8 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const [saving, setSaving] = useState(false)
+  const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set())
+  const [savingAll, setSavingAll] = useState(false)
 
   const sb = createClient()
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
@@ -55,17 +57,48 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
     revalidateHome()
   }
 
+  const handleSaveAll = async () => {
+    if (dirtyIds.size === 0) return
+    setSavingAll(true)
+    const ids = Array.from(dirtyIds)
+    const results = await Promise.all(ids.map(id => {
+      const partner = partners.find(x => x.id === id)!
+      return sb.from('partners').update({ is_active: partner.is_active }).eq('id', id)
+    }))
+    const hasError = results.some(r => r.error)
+    if (hasError) {
+      showToast('일부 항목 저장에 실패했습니다.', 'error')
+    } else {
+      showToast('변경사항이 저장되었습니다.')
+      setDirtyIds(new Set())
+      revalidateHome()
+    }
+    setSavingAll(false)
+  }
+
   return (
     <div>
       <AdminSection
         title="파트너 관리"
         desc="홈페이지 하단 파트너/고객사 로고를 관리합니다."
-        action={<Btn onClick={() => { setEditing({ name: '', logo_url: '', is_active: true }); setIsNew(true) }}>+ 파트너 추가</Btn>}
+        action={
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {dirtyIds.size > 0 && (
+              <Btn onClick={handleSaveAll} disabled={savingAll}>
+                {savingAll ? '저장 중...' : `변경사항 저장 (${dirtyIds.size})`}
+              </Btn>
+            )}
+            <Btn variant={dirtyIds.size > 0 ? 'secondary' : 'primary'} onClick={() => { setEditing({ name: '', logo_url: '', is_active: true }); setIsNew(true) }}>+ 파트너 추가</Btn>
+          </div>
+        }
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
         {partners.map((p, i) => (
-          <AdminCard key={p.id}>
+          <AdminCard key={p.id} style={{
+            outline: dirtyIds.has(p.id) ? '2px solid #c9a84c' : 'none',
+            outlineOffset: '2px',
+          }}>
             {/* 로고 미리보기 */}
             <div style={{ height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px', background: '#f8fafc', borderRadius: '6px' }}>
               {p.logo_url
@@ -77,16 +110,10 @@ export default function PartnersClient({ initialPartners }: { initialPartners: P
             <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Btn variant="ghost" size="sm" onClick={() => handleOrder(p.id, 'up')} disabled={i === 0}>↑</Btn>
               <Btn variant="ghost" size="sm" onClick={() => handleOrder(p.id, 'down')} disabled={i === partners.length - 1}>↓</Btn>
-              <Toggle value={p.is_active} onChange={async () => {
+              <Toggle value={p.is_active} onChange={() => {
                 const newValue = !p.is_active
                 setPartners(prev => prev.map(x => x.id === p.id ? { ...x, is_active: newValue } : x))
-                const { error } = await sb.from('partners').update({ is_active: newValue }).eq('id', p.id)
-                if (error) {
-                  setPartners(prev => prev.map(x => x.id === p.id ? { ...x, is_active: !newValue } : x))
-                  showToast('변경 실패', 'error')
-                } else {
-                  revalidateHome()
-                }
+                setDirtyIds(prev => new Set(prev).add(p.id))
               }} />
               <Btn variant="secondary" size="sm" onClick={() => { setEditing({ ...p }); setIsNew(false) }}>수정</Btn>
               <Btn variant="danger" size="sm" onClick={() => setDeleteTarget(p.id)}>삭제</Btn>
