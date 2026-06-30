@@ -65,16 +65,16 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
       padding: '8px 0',
       fontSize: '0.78rem',
     }}>
-      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {/* 좌측: 연락처 */}
-        <div style={{ color: 'var(--gray-500)', display: 'flex', gap: '20px', alignItems: 'center' }}>
+      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', rowGap: '4px' }}>
+        {/* 좌측: 연락처 (모바일에서는 공간 절약을 위해 숨김) */}
+        <div className="topbar-contact" style={{ color: 'var(--gray-500)', display: 'flex', gap: '20px', alignItems: 'center' }}>
           <span>📞 02-0000-0000</span>
           <span style={{ color: 'var(--gray-700)' }}>|</span>
           <span>✉ info@woodjajae.co.kr</span>
         </div>
 
         {/* 우측: 메뉴 */}
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div className="topbar-menu" style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
 
           {/* 비로그인: 로그인 + 회원가입 */}
           {!user && (
@@ -145,6 +145,13 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
           </Link>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .topbar-contact { display: none !important; }
+          .topbar-menu { font-size: 0.72rem; gap: 10px !important; }
+        }
+      `}</style>
     </div>
   )
 }
