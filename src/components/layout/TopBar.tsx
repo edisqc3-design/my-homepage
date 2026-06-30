@@ -18,9 +18,6 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
   const router = useRouter()
   const pathname = usePathname()
 
-  // 관리자 페이지에서는 TopBar 숨김
-  if (pathname?.startsWith('/admin')) return null
-
   const initialIsAdminRef = useRef(initialIsAdmin)
   useEffect(() => {
     if (initialIsAdminRef.current !== initialIsAdmin) {
@@ -57,6 +54,9 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
     router.push('/')
     router.refresh()
   }
+
+  // 관리자 페이지에서는 TopBar 숨김
+  if (pathname?.startsWith('/admin')) return null
 
   return (
     <div style={{
