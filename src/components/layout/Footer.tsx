@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const FOOTER_LINKS = [
   {
@@ -35,6 +36,10 @@ const FOOTER_LINKS = [
 type Props = { settings?: Record<string, string> }
 
 export default function Footer({ settings = {} }: Props) {
+  const pathname = usePathname()
+  // 관리자 페이지는 자체 레이아웃을 사용하므로 공개 사이트 푸터는 숨김
+  if (pathname?.startsWith('/admin')) return null
+
   const companyName = settings.company_name ?? '우드자재닷컴'
   const ceoName     = settings.ceo_name ?? '홍길동'
   const bizNumber   = settings.business_number ?? '000-00-00000'

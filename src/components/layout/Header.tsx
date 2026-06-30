@@ -73,6 +73,9 @@ export default function Header({ user, isAdmin }: { user?: User | null, isAdmin?
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  // 관리자 페이지는 자체 사이드바/대시보드 헤더를 사용하므로 공개 사이트 헤더는 숨김
+  if (isAdminPage) return null
+
   return (
     <header style={{
       position: 'sticky',
