@@ -23,7 +23,7 @@ const MENU = [
     group: '콘텐츠 관리',
     items: [
       { label: '시공사례', href: '/admin/gallery', icon: '🏗️' },
-      { label: '제품', href: '/admin/products', icon: '📦' },
+      { label: '제품관리', href: '/admin/products', icon: '📦' },
       { label: '공지사항', href: '/admin/notices', icon: '📢' },
       { label: 'FAQ', href: '/admin/faq', icon: '❓' },
       { label: '자료실', href: '/admin/downloads', icon: '📁' },
