@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase-browser'
 import { checkIsAdmin } from '@/lib/auth-actions'
 import type { User } from '@supabase/supabase-js'
@@ -16,6 +16,10 @@ export default function TopBar({ initialUser, initialIsAdmin }: TopBarProps) {
   const [user, setUser] = useState<User | null>(initialUser)
   const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
   const router = useRouter()
+  const pathname = usePathname()
+
+  // 관리자 페이지에서는 TopBar 숨김
+  if (pathname?.startsWith('/admin')) return null
 
   const initialIsAdminRef = useRef(initialIsAdmin)
   useEffect(() => {
