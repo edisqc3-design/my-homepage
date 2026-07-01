@@ -155,10 +155,10 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
     >
       {/* 피처드 대형 카드 (자동 슬라이드) */}
       <Link href={`/gallery/${featured.id}`} style={{ display: 'block' }} className="webzine-featured">
-        <div style={{ borderRadius: '18px', overflow: 'hidden', position: 'relative', height: '700px', boxShadow: '0 24px 48px -12px rgba(10,22,40,0.22)', cursor: 'pointer' }}>
+        <div style={{ borderRadius: '18px', overflow: 'hidden', position: 'relative', height: '700px', boxShadow: '0 24px 48px -12px rgba(10,22,40,0.22)', cursor: 'pointer', background: 'var(--navy)' }}>
           <div key={featured.id} style={{ position: 'absolute', inset: 0 }} className="webzine-fade">
             {featured.image_url ? (
-              <Image src={featured.image_url} alt={featured.title} fill sizes="(max-width: 900px) 100vw, 60vw" style={{ objectFit: 'cover' }} />
+              <Image src={featured.image_url} alt={featured.title} fill sizes="(max-width: 900px) 100vw, 60vw" style={{ objectFit: 'contain' }} />
             ) : (
               <div style={{ background: 'var(--navy)', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontSize: '4rem', opacity: 0.3 }}>🪵</span>
