@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase-browser'
+import { updateGalleryDisplayMode } from '@/lib/content-actions'
 import { AdminSection, AdminCard, Btn, Input, Textarea, Select, Toggle, MultiImageUploader, ConfirmModal, Toast } from '@/components/admin/AdminUI'
 import type { GalleryItem } from '@/types'
 
@@ -47,17 +48,8 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
 
   const saveDisplayMode = async () => {
     setModeSaving(true)
-    // select로 존재 여부 확인 (.single() 제거 - 없으면 에러 대신 빈 배열 반환)
-    const { data: rows } = await sb.from('site_settings').select('key').eq('key', 'gallery_display_mode')
-    let error
-    if (rows && rows.length > 0) {
-      ;({ error } = await sb.from('site_settings').update({ value: pendingMode }).eq('key', 'gallery_display_mode'))
-    } else {
-      ;({ error } = await sb.from('site_settings').insert({ key: 'gallery_display_mode', value: pendingMode }))
-    }
-    if (error) { showToast('저장 실패: ' + error.message, 'error'); setModeSaving(false); return }
-    // 메인페이지 ISR 캐시 즉시 갱신
-    await fetch('/api/revalidate', { method: 'POST' })
+    const result = await updateGalleryDisplayMode(pendingMode)
+    if (!result.success) { showToast('저장 실패: ' + result.error, 'error'); setModeSaving(false); return }
     setDisplayMode(pendingMode)
     setModeSaving(false)
     showToast(`"${DISPLAY_MODES.find(m => m.value === pendingMode)?.label}" 방식으로 저장되었습니다. 메인화면에 즉시 반영됩니다.`)
