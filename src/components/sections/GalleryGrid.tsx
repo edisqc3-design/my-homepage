@@ -165,7 +165,7 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
               </div>
             )}
             {/* 오버레이 */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,22,40,0.88) 0%, rgba(10,22,40,0.2) 50%, transparent 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,22,40,0.62) 0%, rgba(10,22,40,0.15) 40%, transparent 65%)' }} />
             {featured.category && (
               <span style={{ position: 'absolute', top: '20px', left: '20px', padding: '5px 14px', background: CATEGORY_COLORS[featured.category] ?? '#555', color: '#fff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '20px' }}>
                 {featured.category}
