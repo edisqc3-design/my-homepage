@@ -22,8 +22,9 @@ import RecentPosts from '@/components/sections/RecentPosts'
 import CustomerSupport from '@/components/sections/CustomerSupport'
 import Partners from '@/components/sections/Partners'
 
-// 서버 컴포넌트 — 빌드 시 또는 요청 시 Supabase에서 fetch
-export const revalidate = 60 // 60초마다 ISR 재생성
+// 서버 컴포넌트 — on-demand revalidation 사용 (관리자 저장 시 즉시 반영)
+// ISR 60초 캐시 대신 force-dynamic으로 항상 최신 데이터 보장
+export const dynamic = 'force-dynamic'
 
 // site_settings에 키가 없으면 기존 동작 그대로 노출(true)로 처리.
 // 명시적으로 'false'로 저장된 경우에만 숨김.
