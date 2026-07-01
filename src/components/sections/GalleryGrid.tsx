@@ -188,40 +188,77 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
 }
 
 /* ────────────────────────────────────────────
-   매거진형 (가로 스크롤 대형 카드)
+   매거진형 (이미지 위 텍스트 오버레이 - 시네마틱)
 ──────────────────────────────────────────── */
 function MagazineMode({ items }: { items: GalleryItem[] }) {
   const visible = items.slice(0, 8)
   return (
-    <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '8px' }} className="magazine-scroller">
-      {visible.map(item => (
-        <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block', flex: '0 0 280px' }}>
-          <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--gray-100)', background: '#fff', cursor: 'pointer', transition: 'transform 0.25s, box-shadow 0.25s' }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(10,22,40,0.16)' }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
-            <div style={{ width: '100%', height: '200px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
-              {item.image_url ? (
-                <Image src={item.image_url} alt={item.title} fill sizes="280px" style={{ objectFit: 'cover' }} />
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '2rem', opacity: 0.3 }}>🪵</div>
-              )}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,22,40,0.5) 0%, transparent 60%)' }} />
-              {item.category && (
-                <span style={{ position: 'absolute', top: '12px', left: '12px', padding: '4px 11px', background: CATEGORY_COLORS[item.category] ?? '#555', color: '#fff', fontSize: '0.68rem', fontWeight: 700, borderRadius: '20px' }}>
-                  {item.category}
-                </span>
-              )}
-            </div>
-            <div style={{ padding: '16px' }}>
-              <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.4, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+    <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '8px', cursor: 'grab' }} className="magazine-scroller">
+      {visible.map((item, idx) => (
+        <Link key={item.id} href={`/gallery/${item.id}`}
+          style={{ display: 'block', flex: idx === 0 ? '0 0 420px' : '0 0 260px' }}>
+          <div
+            style={{
+              position: 'relative', borderRadius: '16px', overflow: 'hidden',
+              height: idx === 0 ? '380px' : '280px',
+              boxShadow: '0 8px 32px rgba(10,22,40,0.18)', cursor: 'pointer',
+              transition: 'transform 0.3s, box-shadow 0.3s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 20px 48px rgba(10,22,40,0.28)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(10,22,40,0.18)' }}
+          >
+            {/* 배경 이미지 */}
+            {item.image_url ? (
+              <Image src={item.image_url} alt={item.title} fill sizes={idx === 0 ? '420px' : '260px'} style={{ objectFit: 'cover' }} />
+            ) : (
+              <div style={{ background: 'var(--navy)', height: '100%' }} />
+            )}
+            {/* 그라데이션 오버레이 */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to top, rgba(5,12,30,0.92) 0%, rgba(5,12,30,0.4) 50%, rgba(5,12,30,0.05) 100%)',
+            }} />
+            {/* 카테고리 뱃지 */}
+            {item.category && (
+              <span style={{
+                position: 'absolute', top: '14px', left: '14px',
+                padding: '4px 12px', fontSize: '0.68rem', fontWeight: 800,
+                background: CATEGORY_COLORS[item.category] ?? '#555',
+                color: '#fff', borderRadius: '20px', letterSpacing: '0.03em',
+              }}>{item.category}</span>
+            )}
+            {/* 첫번째 카드에 FEATURE 뱃지 */}
+            {idx === 0 && (
+              <span style={{
+                position: 'absolute', top: '14px', right: '14px',
+                padding: '3px 10px', fontSize: '0.62rem', fontWeight: 800,
+                background: 'var(--gold)', color: 'var(--navy)', borderRadius: '6px', letterSpacing: '0.08em',
+              }}>FEATURE</span>
+            )}
+            {/* 하단 텍스트 */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: idx === 0 ? '28px 24px' : '20px 16px' }}>
+              <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.55)', marginBottom: '6px', fontWeight: 600 }}>
+                {item.created_at.slice(0, 10)}
+              </p>
+              <h4 style={{
+                fontSize: idx === 0 ? '1.15rem' : '0.9rem', fontWeight: 800,
+                color: '#fff', lineHeight: 1.35,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              } as React.CSSProperties}>
                 {item.title}
               </h4>
-              {item.description && (
-                <p style={{ fontSize: '0.75rem', color: 'var(--gray-500)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+              {idx === 0 && item.description && (
+                <p style={{
+                  fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', marginTop: '8px', lineHeight: 1.5,
+                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                } as React.CSSProperties}>
                   {item.description}
                 </p>
               )}
-              <p style={{ fontSize: '0.7rem', color: '#c9a84c', marginTop: '10px', fontWeight: 600 }}>{item.created_at.slice(0, 10)}</p>
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 700 }}>
+                자세히 보기
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+              </div>
             </div>
           </div>
         </Link>
