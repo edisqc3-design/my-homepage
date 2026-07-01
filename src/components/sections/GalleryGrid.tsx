@@ -121,141 +121,124 @@ function CardMode({ items }: { items: GalleryItem[] }) {
 }
 
 /* ────────────────────────────────────────────
-   웹진형 — 자동 롤링 피처드 + 우측 썸네일 그리드
+   웹진형 (큰 피처드 자동 슬라이드 + 우측 리스트 4개, 현재 슬라이드 표시)
 ──────────────────────────────────────────── */
 function WebzineMode({ items }: { items: GalleryItem[] }) {
+  // 자동 슬라이드에 사용할 최대 5개 (피처드 1 + 사이드 4)
+  const slidePool = items.slice(0, 5)
+  const sideItems = slidePool.slice(1, 5)
+
   const [activeIndex, setActiveIndex] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [animating, setAnimating] = useState(false)
-  const thumbItems = items.slice(0, 8)
-  const featured = thumbItems[activeIndex]
-
-  const goTo = (idx: number) => {
-    if (idx === activeIndex || animating) return
-    setAnimating(true)
-    setTimeout(() => { setActiveIndex(idx); setAnimating(false) }, 320)
-  }
 
   useEffect(() => {
-    if (paused) return
-    const timer = setInterval(() => {
-      setAnimating(true)
-      setTimeout(() => {
-        setActiveIndex(prev => (prev + 1) % thumbItems.length)
-        setAnimating(false)
-      }, 320)
+    if (slidePool.length <= 1 || paused) return
+    const id = setInterval(() => {
+      setActiveIndex(prev => (prev + 1) % slidePool.length)
     }, 4500)
-    return () => clearInterval(timer)
-  }, [paused, thumbItems.length])
+    return () => clearInterval(id)
+  }, [slidePool.length, paused])
 
-  if (!featured) return null
+  const featured = slidePool[activeIndex]
 
   return (
     <div
-      className="webzine-layout"
-      style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '14px', minHeight: '520px' }}
+      style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}
+      className="webzine-grid"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* ── 왼쪽: 롤링 피처드 ── */}
-      <Link href={`/gallery/${featured.id}`} style={{ display: 'block', position: 'relative', borderRadius: '20px', overflow: 'hidden', minHeight: '520px' }}>
-        {/* 이미지 페이드 전환 */}
-        {thumbItems.map((item, idx) => (
-          <div key={item.id} style={{
-            position: 'absolute', inset: 0,
-            opacity: idx === activeIndex && !animating ? 1 : 0,
-            transition: 'opacity 0.35s ease',
-            pointerEvents: idx === activeIndex ? 'auto' : 'none',
-          }}>
-            {item.image_url
-              ? <Image src={item.image_url} alt={item.title} fill sizes="(max-width:900px) 100vw, 65vw" style={{ objectFit: 'cover' }} priority={idx === 0} />
-              : <div style={{ background: 'linear-gradient(135deg,var(--navy-light),var(--navy))', height: '100%' }} />
-            }
+      {/* 피처드 대형 카드 (자동 슬라이드) */}
+      <Link href={`/gallery/${featured.id}`} style={{ display: 'block' }} className="webzine-featured">
+        <div style={{ borderRadius: '18px', overflow: 'hidden', position: 'relative', height: '460px', boxShadow: '0 24px 48px -12px rgba(10,22,40,0.22)', cursor: 'pointer' }}>
+          <div key={featured.id} style={{ position: 'absolute', inset: 0 }} className="webzine-fade">
+            {featured.image_url ? (
+              <Image src={featured.image_url} alt={featured.title} fill sizes="(max-width: 900px) 100vw, 60vw" style={{ objectFit: 'cover' }} />
+            ) : (
+              <div style={{ background: 'var(--navy)', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '4rem', opacity: 0.3 }}>🪵</span>
+              </div>
+            )}
+            {/* 오버레이 */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,22,40,0.88) 0%, rgba(10,22,40,0.2) 50%, transparent 100%)' }} />
+            {featured.category && (
+              <span style={{ position: 'absolute', top: '20px', left: '20px', padding: '5px 14px', background: CATEGORY_COLORS[featured.category] ?? '#555', color: '#fff', fontSize: '0.75rem', fontWeight: 700, borderRadius: '20px' }}>
+                {featured.category}
+              </span>
+            )}
+            <div style={{ position: 'absolute', bottom: '28px', left: '28px', right: '28px' }}>
+              <div style={{ display: 'inline-block', background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.68rem', fontWeight: 800, padding: '3px 10px', borderRadius: '6px', marginBottom: '10px', letterSpacing: '0.05em' }}>
+                FEATURED
+              </div>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff', lineHeight: 1.35, marginBottom: '8px' }}>{featured.title}</h3>
+              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>{featured.created_at.slice(0, 10)}</p>
+            </div>
           </div>
-        ))}
 
-        {/* 그라데이션 오버레이 */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'linear-gradient(to top, rgba(5,12,30,0.92) 0%, rgba(5,12,30,0.3) 55%, rgba(5,12,30,0.04) 100%)' }} />
-
-        {/* 상단 뱃지 */}
-        <div style={{ position: 'absolute', top: '22px', left: '22px', right: '22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
-          {featured.category && (
-            <span style={{ padding: '5px 14px', background: CATEGORY_COLORS[featured.category] ?? '#555', color: '#fff', fontSize: '0.72rem', fontWeight: 700, borderRadius: '20px' }}>
-              {featured.category}
-            </span>
+          {/* 슬라이드 인디케이터 (도트) */}
+          {slidePool.length > 1 && (
+            <div style={{ position: 'absolute', bottom: '14px', right: '20px', display: 'flex', gap: '6px', zIndex: 2 }}>
+              {slidePool.map((s, i) => (
+                <span
+                  key={s.id}
+                  style={{
+                    width: i === activeIndex ? '20px' : '6px', height: '6px', borderRadius: '3px',
+                    background: i === activeIndex ? 'var(--gold)' : 'rgba(255,255,255,0.5)',
+                    transition: 'all 0.35s ease',
+                  }}
+                />
+              ))}
+            </div>
           )}
-          <span style={{ marginLeft: 'auto', padding: '4px 12px', background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.65rem', fontWeight: 800, borderRadius: '6px', letterSpacing: '0.08em' }}>
-            {activeIndex + 1} / {thumbItems.length}
-          </span>
-        </div>
-
-        {/* 하단 텍스트 */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, padding: '36px 32px 30px', zIndex: 2,
-          opacity: animating ? 0 : 1, transform: animating ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.3s, transform 0.3s',
-        }}>
-          <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', fontWeight: 600 }}>
-            {featured.created_at.slice(0, 10)}
-          </p>
-          <h3 style={{ fontSize: '1.55rem', fontWeight: 800, color: '#fff', lineHeight: 1.3, marginBottom: '10px' }}>
-            {featured.title}
-          </h3>
-          {featured.description && (
-            <p style={{ fontSize: '0.84rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, marginBottom: '18px',
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
-              {featured.description}
-            </p>
-          )}
-          {/* 인디케이터 dots */}
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            {thumbItems.map((_, i) => (
-              <button key={i} onClick={e => { e.preventDefault(); goTo(i) }}
-                style={{
-                  width: i === activeIndex ? '22px' : '6px', height: '6px',
-                  borderRadius: '3px', border: 'none', cursor: 'pointer', padding: 0,
-                  background: i === activeIndex ? 'var(--gold)' : 'rgba(255,255,255,0.3)',
-                  transition: 'all 0.35s',
-                }} />
-            ))}
-          </div>
         </div>
       </Link>
 
-      {/* ── 오른쪽: 사각형 썸네일 그리드 ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', alignContent: 'start' }}>
-        {thumbItems.map((item, idx) => (
-          <button key={item.id} onClick={() => goTo(idx)}
-            style={{
-              position: 'relative', borderRadius: '10px', overflow: 'hidden',
-              aspectRatio: '1 / 1', padding: 0, border: 'none', cursor: 'pointer',
-              outline: idx === activeIndex ? '2.5px solid var(--gold)' : '2.5px solid transparent',
-              outlineOffset: '1px',
-              boxShadow: idx === activeIndex ? '0 0 0 3px rgba(201,168,76,0.25)' : 'none',
-              transform: idx === activeIndex ? 'scale(1.04)' : 'scale(1)',
-              transition: 'transform 0.25s, outline-color 0.25s, box-shadow 0.25s',
-              background: 'var(--navy)',
-            }}>
-            {item.image_url
-              ? <Image src={item.image_url} alt={item.title} fill sizes="100px"
-                  style={{ objectFit: 'cover', opacity: idx === activeIndex ? 1 : 0.65, transition: 'opacity 0.25s' }} />
-              : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', opacity: 0.3 }}>🪵</div>
-            }
-            {/* 어두운 오버레이 (비활성) */}
-            <div style={{ position: 'absolute', inset: 0, background: idx === activeIndex ? 'transparent' : 'rgba(5,12,30,0.3)', transition: 'background 0.25s' }} />
-            {/* 카테고리 뱃지 */}
-            {item.category && (
-              <span style={{ position: 'absolute', bottom: '5px', left: '5px', padding: '2px 6px', fontSize: '0.56rem', fontWeight: 700, background: CATEGORY_COLORS[item.category] ?? '#555', color: '#fff', borderRadius: '8px' }}>
-                {item.category}
-              </span>
-            )}
-            {/* 활성 체크 */}
-            {idx === activeIndex && (
-              <div style={{ position: 'absolute', top: '5px', right: '5px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+      {/* 우측 리스트 (4개, 현재 피처드로 표시 중인 항목 강조) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {sideItems.map(item => {
+          const isActive = item.id === featured.id
+          return (
+            <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block' }}>
+              <div
+                style={{
+                  display: 'flex', gap: '14px', borderRadius: '12px', overflow: 'hidden',
+                  border: isActive ? '2px solid var(--gold)' : '1px solid var(--gray-100)',
+                  background: isActive ? 'rgba(201,168,76,0.08)' : '#fff',
+                  transition: 'box-shadow 0.2s, border-color 0.3s, background 0.3s',
+                  padding: '0', cursor: 'pointer', position: 'relative',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(10,22,40,0.12)')}
+                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+              >
+                <div style={{ width: '100px', minWidth: '100px', height: '90px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
+                  {item.image_url ? (
+                    <Image src={item.image_url} alt={item.title} fill sizes="100px" style={{ objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '1.5rem', opacity: 0.3 }}>🪵</div>
+                  )}
+                </div>
+                <div style={{ padding: '14px 12px 14px 0', flex: 1, minWidth: 0 }}>
+                  {item.category && (
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, color: CATEGORY_COLORS[item.category] ?? '#555', marginBottom: '4px', display: 'block' }}>{item.category}</span>
+                  )}
+                  <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.35, marginBottom: '6px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+                    {item.title}
+                  </p>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>{item.created_at.slice(0, 10)}</p>
+                </div>
+                {isActive && (
+                  <span style={{
+                    position: 'absolute', top: '8px', right: '8px', padding: '2px 8px',
+                    background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.62rem', fontWeight: 800,
+                    borderRadius: '10px', letterSpacing: '0.02em',
+                  }}>
+                    지금 보는 중
+                  </span>
+                )}
               </div>
-            )}
-          </button>
-        ))}
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
@@ -370,18 +353,21 @@ export default function GalleryGrid({ items, displayMode = 'card' }: { items: Ga
       <style>{`
         .gallery-scroller::-webkit-scrollbar { display: none; }
         .magazine-scroller::-webkit-scrollbar { display: none; }
+        .webzine-fade { animation: webzineFadeIn 0.6s ease; }
+        @keyframes webzineFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
         @media (max-width: 900px) {
           .gallery-slide-arrow { display: none !important; }
           .gallery-slide-wrapper { padding: 0 !important; }
           .gallery-scroller { overflow-x: auto !important; }
           .gallery-page { grid-template-columns: repeat(2, 1fr) !important; }
-          .webzine-top { grid-template-columns: 1fr !important; height: auto !important; }
-          .webzine-top > div:last-child { flex-direction: row !important; height: 200px !important; }
-          .webzine-bottom { grid-template-columns: 1fr !important; }
+          .webzine-grid { grid-template-columns: 1fr !important; }
+          .webzine-featured { order: -1; }
         }
         @media (max-width: 480px) {
           .gallery-page { grid-template-columns: 1fr !important; }
-          .webzine-top > div:last-child { flex-direction: column !important; height: auto !important; }
         }
       `}</style>
     </section>
