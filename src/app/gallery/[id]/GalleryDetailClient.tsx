@@ -48,7 +48,7 @@ function ImageSlider({ images, title }: { images: string[]; title: string }) {
             borderRadius: '16px', overflow: 'hidden', cursor: 'zoom-in',
             background: 'linear-gradient(135deg, var(--navy-light), var(--navy))',
           }}>
-          <Image src={images[active]} alt={`${title} ${active + 1}`} fill style={{ objectFit: 'cover' }} />
+          <Image src={images[active]} alt={`${title} ${active + 1}`} fill style={{ objectFit: 'contain' }} />
 
           {images.length > 1 && (
             <>
