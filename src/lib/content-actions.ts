@@ -113,6 +113,19 @@ export async function updatePartnerOrder(
 
 // ──────────────────────────── Site Settings ────────────────────────────
 
+export async function updateGalleryDisplayMode(
+  mode: string
+): Promise<ActionResult> {
+  const sb = getAdminClient()
+  const { error } = await sb.from('site_settings').upsert(
+    { key: 'gallery_display_mode', value: mode, updated_at: new Date().toISOString() },
+    { onConflict: 'key' }
+  )
+  if (error) return { success: false, error: error.message }
+  revalidatePath('/')
+  return { success: true, data: undefined }
+}
+
 export async function updateSiteSettings(
   settings: Record<string, string>
 ): Promise<ActionResult> {
