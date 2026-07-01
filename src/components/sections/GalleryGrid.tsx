@@ -148,14 +148,14 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
 
   return (
     <div
-      style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'stretch' }}
+      style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '24px', alignItems: 'stretch' }}
       className="webzine-grid"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       {/* 피처드 대형 카드 (자동 슬라이드) */}
       <Link href={`/gallery/${featured.id}`} style={{ display: 'block' }} className="webzine-featured">
-        <div style={{ borderRadius: '18px', overflow: 'hidden', position: 'relative', height: '460px', boxShadow: '0 24px 48px -12px rgba(10,22,40,0.22)', cursor: 'pointer' }}>
+        <div style={{ borderRadius: '18px', overflow: 'hidden', position: 'relative', height: '700px', boxShadow: '0 24px 48px -12px rgba(10,22,40,0.22)', cursor: 'pointer' }}>
           <div key={featured.id} style={{ position: 'absolute', inset: 0 }} className="webzine-fade">
             {featured.image_url ? (
               <Image src={featured.image_url} alt={featured.title} fill sizes="(max-width: 900px) 100vw, 60vw" style={{ objectFit: 'cover' }} />
@@ -202,7 +202,7 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
       </Link>
 
       {/* 우측 리스트 (좌측과 동일한 4개, 현재 표시 중인 항목 강조) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '460px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '700px' }}>
         {slidePool.map((item, i) => {
           const isActive = i === safeIndex
           return (
