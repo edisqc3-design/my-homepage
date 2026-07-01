@@ -124,26 +124,31 @@ function CardMode({ items }: { items: GalleryItem[] }) {
    웹진형 (큰 피처드 자동 슬라이드 + 우측 리스트 4개, 현재 슬라이드 표시)
 ──────────────────────────────────────────── */
 function WebzineMode({ items }: { items: GalleryItem[] }) {
-  // 자동 슬라이드에 사용할 최대 5개 (피처드 1 + 사이드 4)
-  const slidePool = items.slice(0, 5)
-  const sideItems = slidePool.slice(1, 5)
+  // 좌측 피처드와 우측 리스트가 "같은" 4개를 공유 → 자동 슬라이드 시 항상 우측에 현재 항목이 강조 표시됨
+  const slidePool = items.slice(0, 4)
 
   const [activeIndex, setActiveIndex] = useState(0)
   const [paused, setPaused] = useState(false)
 
   useEffect(() => {
-    if (slidePool.length <= 1 || paused) return
+    if (slidePool.length <= 1) return
+    if (paused) return
     const id = setInterval(() => {
       setActiveIndex(prev => (prev + 1) % slidePool.length)
-    }, 4500)
+    }, 4000)
     return () => clearInterval(id)
+    // slidePool.length 는 items 개수가 바뀌지 않는 한 고정값이므로 의존성으로 충분
   }, [slidePool.length, paused])
 
-  const featured = slidePool[activeIndex]
+  // items 개수가 activeIndex 보다 줄어드는 경우를 대비한 안전장치
+  const safeIndex = activeIndex < slidePool.length ? activeIndex : 0
+  const featured = slidePool[safeIndex]
+
+  if (!featured) return null
 
   return (
     <div
-      style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}
+      style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'stretch' }}
       className="webzine-grid"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -179,11 +184,14 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
           {slidePool.length > 1 && (
             <div style={{ position: 'absolute', bottom: '14px', right: '20px', display: 'flex', gap: '6px', zIndex: 2 }}>
               {slidePool.map((s, i) => (
-                <span
+                <button
                   key={s.id}
+                  type="button"
+                  aria-label={`${i + 1}번째 슬라이드`}
+                  onClick={e => { e.preventDefault(); setActiveIndex(i) }}
                   style={{
-                    width: i === activeIndex ? '20px' : '6px', height: '6px', borderRadius: '3px',
-                    background: i === activeIndex ? 'var(--gold)' : 'rgba(255,255,255,0.5)',
+                    width: i === safeIndex ? '20px' : '6px', height: '6px', borderRadius: '3px', padding: 0, border: 'none', cursor: 'pointer',
+                    background: i === safeIndex ? 'var(--gold)' : 'rgba(255,255,255,0.5)',
                     transition: 'all 0.35s ease',
                   }}
                 />
@@ -193,43 +201,43 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
         </div>
       </Link>
 
-      {/* 우측 리스트 (4개, 현재 피처드로 표시 중인 항목 강조) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {sideItems.map(item => {
-          const isActive = item.id === featured.id
+      {/* 우측 리스트 (좌측과 동일한 4개, 현재 표시 중인 항목 강조) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '460px' }}>
+        {slidePool.map((item, i) => {
+          const isActive = i === safeIndex
           return (
-            <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block' }}>
+            <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block', flex: 1, minHeight: 0 }}>
               <div
+                onMouseEnter={e => { setPaused(true); e.currentTarget.style.boxShadow = '0 8px 24px rgba(10,22,40,0.12)' }}
+                onMouseLeave={e => { setPaused(false); e.currentTarget.style.boxShadow = 'none' }}
                 style={{
-                  display: 'flex', gap: '14px', borderRadius: '12px', overflow: 'hidden',
+                  display: 'flex', alignItems: 'stretch', gap: '12px', borderRadius: '12px', overflow: 'hidden', height: '100%',
                   border: isActive ? '2px solid var(--gold)' : '1px solid var(--gray-100)',
                   background: isActive ? 'rgba(201,168,76,0.08)' : '#fff',
                   transition: 'box-shadow 0.2s, border-color 0.3s, background 0.3s',
-                  padding: '0', cursor: 'pointer', position: 'relative',
+                  cursor: 'pointer', position: 'relative',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 24px rgba(10,22,40,0.12)')}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
               >
-                <div style={{ width: '100px', minWidth: '100px', height: '90px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
+                <div style={{ width: '72px', minWidth: '72px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
                   {item.image_url ? (
-                    <Image src={item.image_url} alt={item.title} fill sizes="100px" style={{ objectFit: 'cover' }} />
+                    <Image src={item.image_url} alt={item.title} fill sizes="72px" style={{ objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '1.5rem', opacity: 0.3 }}>🪵</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '1.2rem', opacity: 0.3 }}>🪵</div>
                   )}
                 </div>
-                <div style={{ padding: '14px 12px 14px 0', flex: 1, minWidth: 0 }}>
+                <div style={{ padding: '10px 12px 10px 0', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   {item.category && (
-                    <span style={{ fontSize: '0.65rem', fontWeight: 700, color: CATEGORY_COLORS[item.category] ?? '#555', marginBottom: '4px', display: 'block' }}>{item.category}</span>
+                    <span style={{ fontSize: '0.62rem', fontWeight: 700, color: CATEGORY_COLORS[item.category] ?? '#555', marginBottom: '3px', display: 'block' }}>{item.category}</span>
                   )}
-                  <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.35, marginBottom: '6px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
+                  <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--navy)', lineHeight: 1.3, marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {item.title}
                   </p>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>{item.created_at.slice(0, 10)}</p>
+                  <p style={{ fontSize: '0.68rem', color: 'var(--gray-500)' }}>{item.created_at.slice(0, 10)}</p>
                 </div>
                 {isActive && (
                   <span style={{
-                    position: 'absolute', top: '8px', right: '8px', padding: '2px 8px',
-                    background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.62rem', fontWeight: 800,
+                    position: 'absolute', top: '6px', right: '6px', padding: '2px 7px',
+                    background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.58rem', fontWeight: 800,
                     borderRadius: '10px', letterSpacing: '0.02em',
                   }}>
                     지금 보는 중
