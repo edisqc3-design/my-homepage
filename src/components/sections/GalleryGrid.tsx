@@ -121,192 +121,142 @@ function CardMode({ items }: { items: GalleryItem[] }) {
 }
 
 /* ────────────────────────────────────────────
-   웹진형 — 고급 에디토리얼 레이아웃
-   [Featured 대형] + [우측 2단 오버레이 카드]
-   + [하단 2개 수평 카드]
+   웹진형 — 자동 롤링 피처드 + 우측 썸네일 그리드
 ──────────────────────────────────────────── */
-function WebzineFeaturedCard({ item }: { item: GalleryItem }) {
-  const [hovered, setHovered] = useState(false)
+function WebzineMode({ items }: { items: GalleryItem[] }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [animating, setAnimating] = useState(false)
+  const thumbItems = items.slice(0, 8)
+  const featured = thumbItems[activeIndex]
+
+  const goTo = (idx: number) => {
+    if (idx === activeIndex || animating) return
+    setAnimating(true)
+    setTimeout(() => { setActiveIndex(idx); setAnimating(false) }, 320)
+  }
+
+  useEffect(() => {
+    if (paused) return
+    const timer = setInterval(() => {
+      setAnimating(true)
+      setTimeout(() => {
+        setActiveIndex(prev => (prev + 1) % thumbItems.length)
+        setAnimating(false)
+      }, 320)
+    }, 4500)
+    return () => clearInterval(timer)
+  }, [paused, thumbItems.length])
+
+  if (!featured) return null
+
   return (
-    <Link href={`/gallery/${item.id}`} style={{ display: 'block', height: '100%' }}>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          position: 'relative', height: '100%', minHeight: '520px',
-          borderRadius: '20px', overflow: 'hidden',
-          boxShadow: hovered ? '0 32px 64px -12px rgba(10,22,40,0.38)' : '0 16px 48px -12px rgba(10,22,40,0.22)',
-          transition: 'box-shadow 0.4s, transform 0.4s',
-          transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-          cursor: 'pointer',
-        }}>
-        {item.image_url ? (
-          <Image src={item.image_url} alt={item.title} fill sizes="(max-width:900px) 100vw, 58vw"
-            style={{ objectFit: 'cover', transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)', transform: hovered ? 'scale(1.06)' : 'scale(1)' }} />
-        ) : (
-          <div style={{ background: 'linear-gradient(135deg,var(--navy-light),var(--navy))', height: '100%' }} />
-        )}
+    <div
+      className="webzine-layout"
+      style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: '14px', minHeight: '520px' }}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {/* ── 왼쪽: 롤링 피처드 ── */}
+      <Link href={`/gallery/${featured.id}`} style={{ display: 'block', position: 'relative', borderRadius: '20px', overflow: 'hidden', minHeight: '520px' }}>
+        {/* 이미지 페이드 전환 */}
+        {thumbItems.map((item, idx) => (
+          <div key={item.id} style={{
+            position: 'absolute', inset: 0,
+            opacity: idx === activeIndex && !animating ? 1 : 0,
+            transition: 'opacity 0.35s ease',
+            pointerEvents: idx === activeIndex ? 'auto' : 'none',
+          }}>
+            {item.image_url
+              ? <Image src={item.image_url} alt={item.title} fill sizes="(max-width:900px) 100vw, 65vw" style={{ objectFit: 'cover' }} priority={idx === 0} />
+              : <div style={{ background: 'linear-gradient(135deg,var(--navy-light),var(--navy))', height: '100%' }} />
+            }
+          </div>
+        ))}
+
         {/* 그라데이션 오버레이 */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: hovered
-            ? 'linear-gradient(to top, rgba(5,12,30,0.95) 0%, rgba(5,12,30,0.55) 45%, rgba(5,12,30,0.1) 80%, transparent 100%)'
-            : 'linear-gradient(to top, rgba(5,12,30,0.88) 0%, rgba(5,12,30,0.4) 50%, rgba(5,12,30,0.05) 100%)',
-          transition: 'background 0.4s',
-        }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'linear-gradient(to top, rgba(5,12,30,0.92) 0%, rgba(5,12,30,0.3) 55%, rgba(5,12,30,0.04) 100%)' }} />
 
         {/* 상단 뱃지 */}
-        <div style={{ position: 'absolute', top: '22px', left: '22px', right: '22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {item.category && (
-            <span style={{ padding: '5px 14px', background: CATEGORY_COLORS[item.category] ?? '#555', color: '#fff', fontSize: '0.72rem', fontWeight: 700, borderRadius: '20px', backdropFilter: 'blur(4px)' }}>
-              {item.category}
+        <div style={{ position: 'absolute', top: '22px', left: '22px', right: '22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 }}>
+          {featured.category && (
+            <span style={{ padding: '5px 14px', background: CATEGORY_COLORS[featured.category] ?? '#555', color: '#fff', fontSize: '0.72rem', fontWeight: 700, borderRadius: '20px' }}>
+              {featured.category}
             </span>
           )}
           <span style={{ marginLeft: 'auto', padding: '4px 12px', background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.65rem', fontWeight: 800, borderRadius: '6px', letterSpacing: '0.08em' }}>
-            FEATURED
+            {activeIndex + 1} / {thumbItems.length}
           </span>
         </div>
 
-        {/* 하단 콘텐츠 */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '36px 32px 32px' }}>
-          <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', fontWeight: 600, letterSpacing: '0.04em' }}>
-            {item.created_at.slice(0, 10)}
+        {/* 하단 텍스트 */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, padding: '36px 32px 30px', zIndex: 2,
+          opacity: animating ? 0 : 1, transform: animating ? 'translateY(10px)' : 'translateY(0)', transition: 'opacity 0.3s, transform 0.3s',
+        }}>
+          <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', fontWeight: 600 }}>
+            {featured.created_at.slice(0, 10)}
           </p>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', lineHeight: 1.3, marginBottom: '12px', letterSpacing: '-0.01em' }}>
-            {item.title}
+          <h3 style={{ fontSize: '1.55rem', fontWeight: 800, color: '#fff', lineHeight: 1.3, marginBottom: '10px' }}>
+            {featured.title}
           </h3>
-          {item.description && (
-            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, marginBottom: '18px',
+          {featured.description && (
+            <p style={{ fontSize: '0.84rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.65, marginBottom: '18px',
               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
-              {item.description}
+              {featured.description}
             </p>
           )}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '7px',
-            color: 'var(--gold)', fontSize: '0.8rem', fontWeight: 700,
-            opacity: hovered ? 1 : 0.7, transition: 'opacity 0.3s',
-          }}>
-            자세히 보기
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+          {/* 인디케이터 dots */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {thumbItems.map((_, i) => (
+              <button key={i} onClick={e => { e.preventDefault(); goTo(i) }}
+                style={{
+                  width: i === activeIndex ? '22px' : '6px', height: '6px',
+                  borderRadius: '3px', border: 'none', cursor: 'pointer', padding: 0,
+                  background: i === activeIndex ? 'var(--gold)' : 'rgba(255,255,255,0.3)',
+                  transition: 'all 0.35s',
+                }} />
+            ))}
           </div>
         </div>
+      </Link>
+
+      {/* ── 오른쪽: 사각형 썸네일 그리드 ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', alignContent: 'start' }}>
+        {thumbItems.map((item, idx) => (
+          <button key={item.id} onClick={() => goTo(idx)}
+            style={{
+              position: 'relative', borderRadius: '10px', overflow: 'hidden',
+              aspectRatio: '1 / 1', padding: 0, border: 'none', cursor: 'pointer',
+              outline: idx === activeIndex ? '2.5px solid var(--gold)' : '2.5px solid transparent',
+              outlineOffset: '1px',
+              boxShadow: idx === activeIndex ? '0 0 0 3px rgba(201,168,76,0.25)' : 'none',
+              transform: idx === activeIndex ? 'scale(1.04)' : 'scale(1)',
+              transition: 'transform 0.25s, outline-color 0.25s, box-shadow 0.25s',
+              background: 'var(--navy)',
+            }}>
+            {item.image_url
+              ? <Image src={item.image_url} alt={item.title} fill sizes="100px"
+                  style={{ objectFit: 'cover', opacity: idx === activeIndex ? 1 : 0.65, transition: 'opacity 0.25s' }} />
+              : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', opacity: 0.3 }}>🪵</div>
+            }
+            {/* 어두운 오버레이 (비활성) */}
+            <div style={{ position: 'absolute', inset: 0, background: idx === activeIndex ? 'transparent' : 'rgba(5,12,30,0.3)', transition: 'background 0.25s' }} />
+            {/* 카테고리 뱃지 */}
+            {item.category && (
+              <span style={{ position: 'absolute', bottom: '5px', left: '5px', padding: '2px 6px', fontSize: '0.56rem', fontWeight: 700, background: CATEGORY_COLORS[item.category] ?? '#555', color: '#fff', borderRadius: '8px' }}>
+                {item.category}
+              </span>
+            )}
+            {/* 활성 체크 */}
+            {idx === activeIndex && (
+              <div style={{ position: 'absolute', top: '5px', right: '5px', width: '16px', height: '16px', borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </div>
+            )}
+          </button>
+        ))}
       </div>
-    </Link>
-  )
-}
-
-function WebzineSideCard({ item, height }: { item: GalleryItem; height: number }) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <Link href={`/gallery/${item.id}`} style={{ display: 'block', height: `${height}px` }}>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          position: 'relative', height: '100%', borderRadius: '16px', overflow: 'hidden',
-          boxShadow: hovered ? '0 16px 40px -8px rgba(10,22,40,0.3)' : '0 4px 16px rgba(10,22,40,0.1)',
-          transition: 'box-shadow 0.35s, transform 0.35s',
-          transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-          cursor: 'pointer',
-        }}>
-        {item.image_url ? (
-          <Image src={item.image_url} alt={item.title} fill sizes="280px"
-            style={{ objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.4,0,0.2,1)', transform: hovered ? 'scale(1.08)' : 'scale(1)' }} />
-        ) : (
-          <div style={{ background: 'linear-gradient(135deg,var(--navy-light),var(--navy))', height: '100%' }} />
-        )}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: hovered
-            ? 'linear-gradient(to top, rgba(5,12,30,0.92) 0%, rgba(5,12,30,0.3) 55%, transparent 100%)'
-            : 'linear-gradient(to top, rgba(5,12,30,0.82) 0%, rgba(5,12,30,0.15) 60%, transparent 100%)',
-          transition: 'background 0.35s',
-        }} />
-        {item.category && (
-          <span style={{ position: 'absolute', top: '14px', left: '14px', padding: '3px 10px', background: CATEGORY_COLORS[item.category] ?? '#555', color: '#fff', fontSize: '0.65rem', fontWeight: 700, borderRadius: '16px' }}>
-            {item.category}
-          </span>
-        )}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 18px' }}>
-          <p style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.45)', marginBottom: '6px', fontWeight: 600 }}>{item.created_at.slice(0, 10)}</p>
-          <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#fff', lineHeight: 1.35,
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
-            {item.title}
-          </h4>
-          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--gold)', fontSize: '0.7rem', fontWeight: 700, opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }}>
-            자세히 보기 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-          </div>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-function WebzineBottomCard({ item }: { item: GalleryItem }) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <Link href={`/gallery/${item.id}`} style={{ display: 'block' }}>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{
-          display: 'flex', gap: '0', borderRadius: '14px', overflow: 'hidden',
-          border: '1px solid var(--gray-100)', background: 'var(--white)',
-          boxShadow: hovered ? '0 12px 32px rgba(10,22,40,0.13)' : '0 2px 8px rgba(10,22,40,0.05)',
-          transition: 'box-shadow 0.3s, transform 0.3s, border-color 0.3s',
-          transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-          borderColor: hovered ? 'rgba(201,168,76,0.35)' : 'var(--gray-100)',
-          cursor: 'pointer',
-        }}>
-        <div style={{ width: '140px', minWidth: '140px', height: '110px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
-          {item.image_url ? (
-            <Image src={item.image_url} alt={item.title} fill sizes="140px"
-              style={{ objectFit: 'cover', transition: 'transform 0.5s', transform: hovered ? 'scale(1.08)' : 'scale(1)' }} />
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '1.5rem', opacity: 0.3 }}>🪵</div>
-          )}
-          {item.category && (
-            <span style={{ position: 'absolute', bottom: '8px', left: '8px', padding: '2px 8px', background: CATEGORY_COLORS[item.category] ?? '#555', color: '#fff', fontSize: '0.6rem', fontWeight: 700, borderRadius: '10px' }}>
-              {item.category}
-            </span>
-          )}
-        </div>
-        <div style={{ padding: '16px 18px', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{ fontSize: '0.68rem', color: 'var(--gray-400)', marginBottom: '6px', fontWeight: 600 }}>{item.created_at.slice(0, 10)}</p>
-          <p style={{ fontSize: '0.9rem', fontWeight: 700, color: hovered ? '#b45309' : 'var(--navy)', lineHeight: 1.4, marginBottom: '8px', transition: 'color 0.25s',
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as React.CSSProperties}>
-            {item.title}
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 700 }}>
-            자세히 보기 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-          </div>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-function WebzineMode({ items }: { items: GalleryItem[] }) {
-  const [featured, second, third, fourth, fifth] = items
-
-  return (
-    <div className="webzine-layout">
-      {/* 상단: 피처드(좌) + 사이드 2장(우) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '16px', marginBottom: '16px', height: '520px' }} className="webzine-top">
-        {featured && <WebzineFeaturedCard item={featured} />}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
-          {second && <WebzineSideCard item={second} height={248} />}
-          {third && <WebzineSideCard item={third} height={248} />}
-        </div>
-      </div>
-
-      {/* 하단: 수평 카드 2개 */}
-      {(fourth || fifth) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="webzine-bottom">
-          {fourth && <WebzineBottomCard item={fourth} />}
-          {fifth && <WebzineBottomCard item={fifth} />}
-        </div>
-      )}
     </div>
   )
 }
