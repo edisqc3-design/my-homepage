@@ -218,11 +218,11 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
                   cursor: 'pointer', position: 'relative',
                 }}
               >
-                <div style={{ width: '72px', minWidth: '72px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
+                <div style={{ width: '50px', minWidth: '50px', position: 'relative', overflow: 'hidden', background: 'var(--navy)' }}>
                   {item.image_url ? (
-                    <Image src={item.image_url} alt={item.title} fill sizes="72px" style={{ objectFit: 'cover' }} />
+                    <Image src={item.image_url} alt={item.title} fill sizes="50px" style={{ objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '1.2rem', opacity: 0.3 }}>🪵</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '1rem', opacity: 0.3 }}>🪵</div>
                   )}
                 </div>
                 <div style={{ padding: '10px 12px 10px 0', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -340,7 +340,7 @@ export default function GalleryGrid({ items, displayMode = 'card' }: { items: Ga
 
   return (
     <section className="section-gap section-surface-cool">
-      <div className="container">
+      <div className="container" style={displayMode === 'webzine' ? { maxWidth: '1600px' } : undefined}>
         <div className="center-heading">
           <h2>시공 사례</h2>
           <div className="accent-line" />
