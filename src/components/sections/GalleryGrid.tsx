@@ -171,7 +171,7 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
                 {featured.category}
               </span>
             )}
-            <div style={{ position: 'absolute', bottom: '28px', left: '28px', right: '28px' }}>
+            <div style={{ position: 'absolute', bottom: '28px', left: '28px', right: '28px' }} className="webzine-featured-info">
               <div style={{ display: 'inline-block', background: 'var(--gold)', color: 'var(--navy)', fontSize: '0.68rem', fontWeight: 800, padding: '3px 10px', borderRadius: '6px', marginBottom: '10px', letterSpacing: '0.05em' }}>
                 FEATURED
               </div>
@@ -202,11 +202,11 @@ function WebzineMode({ items }: { items: GalleryItem[] }) {
       </Link>
 
       {/* 우측 리스트 (좌측과 동일한 4개, 현재 표시 중인 항목 강조) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '700px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '700px' }} className="webzine-list">
         {slidePool.map((item, i) => {
           const isActive = i === safeIndex
           return (
-            <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block', flex: 1, minHeight: 0 }}>
+            <Link key={item.id} href={`/gallery/${item.id}`} style={{ display: 'block', flex: 1, minHeight: 0 }} className="webzine-list-item">
               <div
                 onMouseEnter={e => { setPaused(true); e.currentTarget.style.boxShadow = '0 8px 24px rgba(10,22,40,0.12)' }}
                 onMouseLeave={e => { setPaused(false); e.currentTarget.style.boxShadow = 'none' }}
@@ -371,11 +371,22 @@ export default function GalleryGrid({ items, displayMode = 'card' }: { items: Ga
           .gallery-slide-wrapper { padding: 0 !important; }
           .gallery-scroller { overflow-x: auto !important; }
           .gallery-page { grid-template-columns: repeat(2, 1fr) !important; }
-          .webzine-grid { grid-template-columns: 1fr !important; }
+          .webzine-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
           .webzine-featured { order: -1; }
+          /* 모바일: 고정 700px 대신 화면 비율에 맞는 높이로, contain 대신 cover로 채워서 위아래 빈 공간 제거 */
+          .webzine-featured > div { height: 62vw !important; min-height: 260px !important; max-height: 420px !important; }
+          .webzine-featured img { object-fit: cover !important; }
+          .webzine-featured h3 { font-size: 1.1rem !important; }
+          .webzine-featured-info { bottom: 18px !important; left: 18px !important; right: 18px !important; }
+          /* 우측 리스트도 고정 700px 대신 내용에 맞는 높이로, 가로 스크롤 없이 컴팩트하게 표시 */
+          .webzine-list { height: auto !important; gap: 10px !important; }
+          .webzine-list-item { flex: none !important; }
+          .webzine-list-item > div { height: 72px !important; }
         }
         @media (max-width: 480px) {
           .gallery-page { grid-template-columns: 1fr !important; }
+          .webzine-featured > div { height: 60vw !important; min-height: 220px !important; }
+          .webzine-list-item > div { height: 66px !important; }
         }
       `}</style>
     </section>
