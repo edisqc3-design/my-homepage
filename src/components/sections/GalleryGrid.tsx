@@ -340,7 +340,7 @@ export default function GalleryGrid({ items, displayMode = 'card' }: { items: Ga
 
   return (
     <section className="section-gap section-surface-cool">
-      <div className="container" style={displayMode === 'webzine' ? { maxWidth: '1800px' } : undefined}>
+      <div className="container" style={displayMode === 'webzine' ? { maxWidth: '1880px' } : undefined}>
         <div className="center-heading">
           <h2>시공 사례</h2>
           <div className="accent-line" />
