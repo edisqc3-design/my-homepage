@@ -47,12 +47,12 @@ export default function GalleryAdminClient({ initialItems }: { initialItems: Gal
 
   const saveDisplayMode = async () => {
     setModeSaving(true)
-    const { data: existing } = await sb.from('site_settings').select('key').eq('key', 'gallery_display_mode').single()
-    if (existing) {
-      await sb.from('site_settings').update({ value: pendingMode }).eq('key', 'gallery_display_mode')
-    } else {
-      await sb.from('site_settings').insert({ key: 'gallery_display_mode', value: pendingMode })
-    }
+    // upsert: key가 있으면 update, 없으면 insert (site_settings.key는 unique)
+    const { error } = await sb.from('site_settings').upsert(
+      { key: 'gallery_display_mode', value: pendingMode },
+      { onConflict: 'key' }
+    )
+    if (error) { showToast('저장 실패: ' + error.message, 'error'); setModeSaving(false); return }
     // 메인페이지 ISR 캐시 즉시 갱신
     await fetch('/api/revalidate', { method: 'POST' })
     setDisplayMode(pendingMode)
